@@ -1,0 +1,12 @@
+Ignore the secrets file to keep the API key private
+.streamlit/secrets.toml
+
+Ignore Python virtual environment folders
+venv/
+*.venv/
+env/
+.env/
+
+Ignore Python cache files
+pycache/
+*.pyc
