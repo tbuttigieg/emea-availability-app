@@ -44,7 +44,7 @@ TEAM_DATA = [
         "name": "Izabella Ferencz",
         "userUri": "https://api.calendly.com/users/BCHFHLGAUO5OTUFG",
         "soloEventUri": "https://api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
-        "languages": ["English", "French", "Spanish"],
+        "languages": ["English", "French"], # Spanish removed
         "team": "EMEA",
         "active": False
     },
@@ -84,7 +84,7 @@ TEAM_DATA = [
         "name": "Nina Leist",
         "userUri": "https://api.calendly.com/users/EAGAHVEPVZKHOGGB",
         "soloEventUri": "https://api.calendly.com/event_types/75f3f3a1-a4e0-4659-8fb8-efefadcd48b9",
-        "languages": ["English", "Spanish", "German", "Italian"],
+        "languages": ["English", "Spanish", "German", "Italian", "French"], # French added
         "team": "EMEA",
         "active": True
     },
@@ -92,7 +92,7 @@ TEAM_DATA = [
         "name": "Sara Pomparelli",
         "userUri": "https://api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
         "soloEventUri": "https://api.calendly.com/event_types/5464d38a-10bc-4ede-ba84-6f924b5e98e6",
-        "languages": ["English", "Spanish", "Italian"],
+        "languages": ["English", "Italian"], # Spanish removed
         "team": "EMEA",
         "active": True
     },
@@ -128,10 +128,6 @@ TIMEZONE_OPTIONS = {
     "CET (Paris, Berlin, Rome)": "Europe/Paris",
     "EET (Athens, Helsinki)": "Europe/Helsinki",
     "GST (Dubai, Abu Dhabi)": "Asia/Dubai",
-    "EST (New York, Toronto)": "America/New_York",
-    "CST (Chicago, Mexico City)": "America/Chicago",
-    "MST (Denver, Phoenix)": "America/Denver",
-    "PST (Los Angeles, Vancouver)": "America/Los_Angeles",
 }
 DEFAULT_TIMEZONE_FRIENDLY = "GMT / BST (London, Dublin)"
 
@@ -343,7 +339,6 @@ if st.session_state.get('admin_authenticated'):
         st.subheader("Team Summary by Language")
         st.write("Total bookable slots for the entire team.")
         
-        # --- FIX: Correctly calculate team summary slots ---
         lang_summary_slots = defaultdict(lambda: defaultdict(int))
         slots_by_specialist_day = defaultdict(lambda: defaultdict(list))
 
@@ -369,7 +364,17 @@ if st.session_state.get('admin_authenticated'):
                 row[day_str] = lang_summary_slots[lang].get(day, 0)
             summary_data.append(row)
         summary_df = pd.DataFrame(summary_data).set_index("Language")
-        st.dataframe(summary_df, use_container_width=True)
+
+        # --- UPDATE: New summary table coloring ---
+        def color_summary_cells(val):
+            if val == 0:
+                return 'background-color: #ffcccb'  # Light Red
+            elif 1 <= val <= 4:
+                return 'background-color: #d4edda'  # Light Green
+            else: # 5+
+                return 'background-color: #28a745; color: white;' # Dark Green
+
+        st.dataframe(summary_df.style.applymap(color_summary_cells), use_container_width=True)
         st.divider()
 
         st.subheader("Team Capacity Heatmap")
@@ -385,24 +390,20 @@ if st.session_state.get('admin_authenticated'):
                 heatmap_data[specialist][day.strftime('%a %d/%m')] = calculate_true_slots(day_slots)
         heatmap_df = pd.DataFrame(heatmap_data).T
         
-        # --- UPDATE: New heatmap coloring ---
         def color_heatmap_cells(val):
             if val == 0:
-                return 'background-color: #ffcccb'  # Light Red
+                return 'background-color: #ffcccb'
             elif 1 <= val <= 2:
-                return 'background-color: #d4edda'  # Light Green
-            else: # 3+
-                return 'background-color: #28a745; color: white;' # Dark Green
+                return 'background-color: #d4edda'
+            else:
+                return 'background-color: #28a745; color: white;'
         
         st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
         st.divider()
 
-        # --- REMOVED: Team Bottleneck View ---
-
         st.subheader("Detailed Specialist Availability")
         sorted_specialists = sorted(admin_availability.keys())
         for specialist in sorted_specialists:
-            # --- UPDATE: Cleaner expander title ---
             with st.expander(f"**{specialist}** - {len(admin_availability[specialist])} available slots found"):
                 slots = admin_availability[specialist]
                 if not slots:
