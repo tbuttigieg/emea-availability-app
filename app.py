@@ -4,9 +4,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 import pytz # Library for timezone handling
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor # For parallel API calls
 
 # --- CONFIGURATION ---
-# TEAM_DATA has been programmatically generated from the 'OBS' Google Sheet tab.
 TEAM_DATA = [
     {
         "name": "Amina Maachoui",
@@ -115,12 +115,11 @@ TEAM_DATA = [
 ]
 
 TEAM_TO_REPORT = 'EMEA'
-WORKING_DAYS_TO_CHECK = 14
+WORKING_DAYS_TO_CHECK = 10 
 MINIMUM_NOTICE_HOURS = 21
 SLOT_DURATION_MINUTES = 120
-ADMIN_PASSWORD = "WinAsOne" # <-- Easy to change password here
+ADMIN_PASSWORD = "WinAsOne" 
 
-# New curated lists for the dropdowns
 LANGUAGES = ["English", "German", "French", "Italian", "Spanish"]
 TIMEZONE_OPTIONS = {
     "GMT / BST (London, Dublin)": "Europe/London",
@@ -143,11 +142,10 @@ def get_filtered_team_members():
         if m["active"] and m["team"] == TEAM_TO_REPORT and m["userUri"] and m["soloEventUri"]
     ]
 
-@st.cache_data(ttl=600) # Cache the data for 10 minutes
+@st.cache_data(ttl=600)
 def get_user_availability(solo_event_uri, start_date, end_date, api_key):
-    """Fetches available slots from the Calendly API, looping in 7-day chunks."""
+    """Fetches available slots from the Calendly API for a single user."""
     if not api_key:
-        st.error("Calendly API Key is not set. Please add it to your secrets.toml file.")
         return []
 
     headers = {
@@ -159,7 +157,7 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
 
     def format_to_iso_z(dt):
         return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
-
+    
     loop_start_date = start_date
     while loop_start_date < end_date:
         loop_end_date = loop_start_date + timedelta(days=7)
@@ -183,72 +181,73 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
                     if start_time_str.endswith('Z'):
                         start_time_str = start_time_str[:-1] + '+00:00'
                     all_slots.append(datetime.fromisoformat(start_time_str))
-
-        except requests.exceptions.HTTPError as e:
-            # Silently fail for the admin view to avoid clutter
+        except requests.exceptions.HTTPError:
             pass
         
         loop_start_date += timedelta(days=7)
 
     return all_slots
 
-
 def fetch_language_availability(team_members, api_key, selected_language):
-    """Fetches and organizes availability data for a single, selected language."""
+    """
+    Fetches availability for a single language using concurrent API calls for speed.
+    """
     utc = pytz.UTC
     now = datetime.now(utc)
     minimum_booking_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
     api_start_date = now + timedelta(minutes=1)
-    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK)
+    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
 
     language_slots = []
     members_for_lang = [m for m in team_members if selected_language in m["languages"]]
     
-    for member in members_for_lang:
-        user_slots = get_user_availability(member["soloEventUri"], api_start_date, api_end_date, api_key)
+    with ThreadPoolExecutor(max_workers=len(members_for_lang) or 1) as executor:
+        args = [(m["soloEventUri"], api_start_date, api_end_date, api_key) for m in members_for_lang]
+        results = executor.map(lambda p: get_user_availability(*p), args)
         
-        for slot_time in user_slots:
-            if slot_time >= minimum_booking_time:
-                language_slots.append({
-                    "specialist": member["name"],
-                    "dateTime": slot_time 
-                })
+        for member, user_slots in zip(members_for_lang, results):
+            for slot_time in user_slots:
+                if slot_time >= minimum_booking_time:
+                    language_slots.append({
+                        "specialist": member["name"],
+                        "dateTime": slot_time 
+                    })
     
     language_slots.sort(key=lambda x: x["dateTime"])
     return language_slots
 
 def fetch_all_team_availability(team_members, api_key):
-    """New function to fetch availability for every team member for the admin view."""
+    """
+    Fetches availability for all team members concurrently for the admin view.
+    """
     utc = pytz.UTC
     now = datetime.now(utc)
     api_start_date = now + timedelta(minutes=1)
-    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK)
+    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
     
     availability_by_specialist = defaultdict(list)
 
-    for member in team_members:
-        user_slots = get_user_availability(member["soloEventUri"], api_start_date, api_end_date, api_key)
-        for slot_time in user_slots:
-            availability_by_specialist[member["name"]].append(slot_time)
+    with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
+        args = [(m["soloEventUri"], api_start_date, api_end_date, api_key) for m in team_members]
+        results = executor.map(lambda p: get_user_availability(*p), args)
+
+        for member, user_slots in zip(team_members, results):
+            for slot_time in user_slots:
+                availability_by_specialist[member["name"]].append(slot_time)
             
     return availability_by_specialist
 
-
 def calculate_true_slots(date_times):
     """Calculates non-overlapping slots."""
-    if not date_times:
-        return 0
-    
+    if not date_times: return 0
     date_times.sort()
     slot_duration = timedelta(minutes=SLOT_DURATION_MINUTES)
     count = 0
     last_booked_end_time = datetime.min.replace(tzinfo=pytz.UTC)
-
     for start_time in date_times:
         if start_time >= last_booked_end_time:
             count += 1
             last_booked_end_time = start_time + slot_duration
-            
     return count
 
 # --- STREAMLIT UI ---
@@ -256,18 +255,11 @@ def calculate_true_slots(date_times):
 st.set_page_config(layout="wide")
 st.title("EMEA Onboarding Team Availability")
 
-# --- Initialize session state for password ---
 if 'admin_authenticated' not in st.session_state:
     st.session_state['admin_authenticated'] = False
 
-# --- Sidebar for user inputs ---
 st.sidebar.header("Options")
-
-selected_language = st.sidebar.selectbox(
-    "Select language",
-    options=LANGUAGES
-)
-
+selected_language = st.sidebar.selectbox("Select language", options=LANGUAGES)
 selected_timezone_friendly = st.sidebar.selectbox(
     "Select your timezone",
     options=TIMEZONE_OPTIONS.keys(),
@@ -286,30 +278,39 @@ if st.sidebar.button("Refresh Availability"):
             all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
 
         if not all_slots:
-            st.info(f"No upcoming availability found for **{selected_language}** in the next {WORKING_DAYS_TO_CHECK} days.")
+            st.info(f"No upcoming availability found for **{selected_language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
         else:
             slots_by_day = defaultdict(list)
+            working_days_count = 0
+            current_day = datetime.now(selected_timezone).date()
+            while working_days_count < WORKING_DAYS_TO_CHECK:
+                if current_day.weekday() < 5: # Monday to Friday
+                    working_days_count +=1
+                current_day += timedelta(days=1)
+            
+            max_date = current_day
+
             for slot in all_slots:
                 local_time = slot["dateTime"].astimezone(selected_timezone)
                 day = local_time.date()
-                if day.weekday() < 5:
+                if day.weekday() < 5 and day < max_date:
                     slots_by_day[day].append(slot)
+            
+            if not slots_by_day:
+                 st.info(f"No upcoming availability found for **{selected_language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
+                 st.stop()
 
             st.header(f"Available Slots for {selected_language}")
             st.write(f"Times are shown in **{selected_timezone_friendly}**.")
             st.divider()
-
             sorted_days = sorted(slots_by_day.keys())
-
             for day in sorted_days:
                 st.subheader(day.strftime('%A, %d %B %Y'))
                 day_slots = slots_by_day[day]
                 unique_times = sorted(list(set(s['dateTime'].astimezone(selected_timezone).strftime('%H:%M') for s in day_slots)))
-                
                 if not unique_times:
                     st.text("No slots available on this day.")
                     continue
-
                 cols = st.columns(5)
                 for i, time_str in enumerate(unique_times):
                     with cols[i % 5]:
@@ -323,12 +324,10 @@ if st.sidebar.button("Refresh Availability"):
                 slots_by_specialist = defaultdict(list)
                 for slot in day_slots:
                     slots_by_specialist[slot['specialist']].append(slot['dateTime'])
-                total_true_slots_for_day = 0
-                for specialist_name, specialist_slots in slots_by_specialist.items():
-                    total_true_slots_for_day += calculate_true_slots(specialist_slots)
+                total_true_slots_for_day = sum(calculate_true_slots(s_slots) for s_slots in slots_by_specialist.values())
                 summary_data.append({
                     "Date": day.strftime('%A, %d %B'),
-                    f"Bookable {SLOT_DURATION_MINUTES}-min Slots": total_true_slots_for_day
+                    "Bookable Slots": total_true_slots_for_day
                 })
             if summary_data:
                 summary_df = pd.DataFrame(summary_data)
@@ -336,53 +335,44 @@ if st.sidebar.button("Refresh Availability"):
 else:
     st.info("Select your options and click 'Refresh Availability' in the sidebar.")
 
-
 # --- Admin Section ---
 st.sidebar.divider()
 st.sidebar.header("Admin Access")
 password = st.sidebar.text_input("Enter password for detailed view", type="password", key="password_input")
-
 if st.sidebar.button("Unlock Detailed View"):
     if password == ADMIN_PASSWORD:
         st.session_state['admin_authenticated'] = True
     else:
         st.sidebar.error("Incorrect password.")
         st.session_state['admin_authenticated'] = False
-
 if st.session_state.get('admin_authenticated'):
     st.sidebar.success("Admin view unlocked!")
     st.divider()
     st.header("🔒 Admin View: Detailed Specialist Availability")
-    
     team_members = get_filtered_team_members()
     with st.spinner("Fetching all team availability..."):
         calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
         admin_availability = fetch_all_team_availability(team_members, calendly_api_key)
-
     if not admin_availability:
         st.warning("No availability found for any team member.")
     else:
         uk_timezone = pytz.timezone("Europe/London")
         sorted_specialists = sorted(admin_availability.keys())
-
         for specialist in sorted_specialists:
             with st.expander(f"**{specialist}** - {len(admin_availability[specialist])} available slots"):
                 slots = admin_availability[specialist]
                 if not slots:
                     st.write("No availability in the upcoming period.")
                     continue
-                
                 slots_by_day = defaultdict(list)
                 for slot_time_utc in slots:
                     local_time = slot_time_utc.astimezone(uk_timezone)
                     day = local_time.date()
-                    if day.weekday() < 5: # Monday-Friday
+                    if day.weekday() < 5:
                         slots_by_day[day].append(local_time)
-
                 if not slots_by_day:
                     st.write("No availability on upcoming weekdays.")
                     continue
-                    
                 sorted_days = sorted(slots_by_day.keys())
                 for day in sorted_days:
                     st.markdown(f"**{day.strftime('%A, %d %B')}**")
