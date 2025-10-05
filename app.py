@@ -119,8 +119,8 @@ WORKING_DAYS_TO_CHECK = 10
 MINIMUM_NOTICE_HOURS = 21
 SLOT_DURATION_MINUTES = 120
 ADMIN_PASSWORD = "WinAsOne" 
-WORKING_HOURS_START = 9  # 9 AM for busy time calculation
-WORKING_HOURS_END = 17 # 5 PM for busy time calculation
+WORKING_HOURS_START = 9
+WORKING_HOURS_END = 17
 
 LANGUAGES = ["English", "German", "French", "Italian", "Spanish"]
 TIMEZONE_OPTIONS = {
@@ -342,19 +342,31 @@ if st.session_state.get('admin_authenticated'):
         
         st.subheader("Team Summary by Language")
         st.write("Total bookable slots for the entire team.")
-        lang_summary_slots = defaultdict(lambda: defaultdict(list))
+        
+        # --- FIX: Correctly calculate team summary slots ---
+        lang_summary_slots = defaultdict(lambda: defaultdict(int))
+        slots_by_specialist_day = defaultdict(lambda: defaultdict(list))
+
         for slot in raw_slots:
             day = slot['dateTime'].astimezone(uk_timezone).date()
             if day in working_days:
-                for lang in slot['specialist_info']['languages']:
-                     lang_summary_slots[lang][day].append(slot['dateTime'])
+                specialist_name = slot['specialist_info']['name']
+                slots_by_specialist_day[specialist_name][day].append(slot['dateTime'])
+        
+        for specialist, day_slots in slots_by_specialist_day.items():
+            specialist_info = next((m for m in active_team_members if m['name'] == specialist), None)
+            if specialist_info:
+                for day, slots in day_slots.items():
+                    true_slots = calculate_true_slots(slots)
+                    for lang in specialist_info['languages']:
+                        lang_summary_slots[lang][day] += true_slots
+
         summary_data = []
         for lang in LANGUAGES:
             row = {"Language": lang}
             for day in working_days:
                 day_str = day.strftime('%a %d/%m')
-                slots_for_day = lang_summary_slots[lang].get(day, [])
-                row[day_str] = calculate_true_slots(slots_for_day)
+                row[day_str] = lang_summary_slots[lang].get(day, 0)
             summary_data.append(row)
         summary_df = pd.DataFrame(summary_data).set_index("Language")
         st.dataframe(summary_df, use_container_width=True)
@@ -372,59 +384,25 @@ if st.session_state.get('admin_authenticated'):
             for day, day_slots in slots_by_day.items():
                 heatmap_data[specialist][day.strftime('%a %d/%m')] = calculate_true_slots(day_slots)
         heatmap_df = pd.DataFrame(heatmap_data).T
-        def color_cells(val):
-            return 'background-color: lightgreen' if val > 0 else 'background-color: white'
-        st.dataframe(heatmap_df.style.applymap(color_cells), use_container_width=True)
+        
+        # --- UPDATE: New heatmap coloring ---
+        def color_heatmap_cells(val):
+            if val == 0:
+                return 'background-color: #ffcccb'  # Light Red
+            elif 1 <= val <= 2:
+                return 'background-color: #d4edda'  # Light Green
+            else: # 3+
+                return 'background-color: #28a745; color: white;' # Dark Green
+        
+        st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
         st.divider()
 
-        # --- NEW: Team Bottleneck View ---
-        st.subheader("Team Bottleneck View")
-        st.write(f"Count of team members who are **unavailable** during core hours ({WORKING_HOURS_START}:00 - {WORKING_HOURS_END}:00).")
-        
-        busy_counts = {day: {"am": 0, "pm": 0} for day in working_days}
-        total_members = len(active_team_members)
-
-        for member in active_team_members:
-            member_slots = admin_availability.get(member['name'], [])
-            for day in working_days:
-                morning_start = uk_timezone.localize(datetime.combine(day, datetime.min.time())).replace(hour=WORKING_HOURS_START)
-                morning_end = morning_start.replace(hour=13)
-                afternoon_start = morning_end
-                afternoon_end = morning_start.replace(hour=WORKING_HOURS_END)
-
-                has_am_slot = any(morning_start <= s.astimezone(uk_timezone) < morning_end for s in member_slots)
-                has_pm_slot = any(afternoon_start <= s.astimezone(uk_timezone) < afternoon_end for s in member_slots)
-                
-                if not has_am_slot: busy_counts[day]["am"] += 1
-                if not has_pm_slot: busy_counts[day]["pm"] += 1
-
-        bottleneck_data = []
-        for day in working_days:
-            bottleneck_data.append({
-                "Day": day.strftime('%A, %d %B'),
-                "Morning (Unavailable)": f"{busy_counts[day]['am']}/{total_members}",
-                "Afternoon (Unavailable)": f"{busy_counts[day]['pm']}/{total_members}",
-            })
-        
-        bottleneck_df = pd.DataFrame(bottleneck_data).set_index("Day")
-
-        def highlight_bottlenecks(cell_value):
-            try:
-                busy, total = map(int, cell_value.split('/'))
-                ratio = busy / total
-                if ratio >= 0.8: return 'background-color: #ffcccb' # Red
-                if ratio >= 0.5: return 'background-color: #ffffcc' # Yellow
-            except (ValueError, ZeroDivisionError):
-                pass
-            return ''
-            
-        st.dataframe(bottleneck_df.style.applymap(highlight_bottlenecks), use_container_width=True)
-        st.divider()
-
+        # --- REMOVED: Team Bottleneck View ---
 
         st.subheader("Detailed Specialist Availability")
         sorted_specialists = sorted(admin_availability.keys())
         for specialist in sorted_specialists:
+            # --- UPDATE: Cleaner expander title ---
             with st.expander(f"**{specialist}** - {len(admin_availability[specialist])} available slots found"):
                 slots = admin_availability[specialist]
                 if not slots:
