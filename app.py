@@ -245,68 +245,109 @@ def get_next_working_days(n, timezone):
         current_day += timedelta(days=1)
     return days
 
+# --- UI HELPER FUNCTIONS ---
+def display_main_availability(all_slots, language, timezone, timezone_friendly):
+    """Renders the main availability view for a selected language."""
+    slots_by_day = defaultdict(list)
+    working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, timezone)
+    for slot in all_slots:
+        day = slot["dateTime"].astimezone(timezone).date()
+        if day in working_days:
+            slots_by_day[day].append(slot)
+    
+    if not slots_by_day:
+         st.info(f"No upcoming availability found for **{language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
+         return
+
+    st.header(f"Available Slots for {language}")
+    st.write(f"Times are shown in **{timezone_friendly}**.")
+    st.divider()
+
+    for day in working_days:
+        if day in slots_by_day:
+            st.subheader(day.strftime('%A, %d %B %Y'))
+            day_slots = slots_by_day[day]
+            unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots)))
+            
+            # --- UPDATE: Use st.chip for mobile-friendly time slots ---
+            # Create a container for the chips to flow correctly
+            container = st.container()
+            # A bit of custom CSS to make the chips look nice and wrap
+            container.markdown("""
+                <style>
+                    .stChip {
+                        display: inline-flex;
+                        margin: 5px;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+
+            with container:
+                # Use columns on larger screens, but this will wrap on mobile
+                 for time_str in unique_times:
+                    st.chip(label=time_str, icon="🕒")
+            
+            st.divider()
+
+    st.header("Summary of Daily Availability")
+    summary_data = []
+    for day in working_days:
+         if day in slots_by_day:
+            day_slots = slots_by_day[day]
+            slots_by_specialist = defaultdict(list)
+            for slot in day_slots:
+                slots_by_specialist[slot['specialist']].append(slot['dateTime'])
+            total_true_slots = sum(calculate_true_slots(s_slots) for s_slots in slots_by_specialist.values())
+            summary_data.append({"Date": day.strftime('%A, %d %B'), "Bookable Slots": total_true_slots})
+    if summary_data:
+        st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
+
+
 # --- STREAMLIT UI ---
 
 st.set_page_config(layout="wide")
 st.title("EMEA Onboarding Team Availability")
 
+# Initialize session state
 if 'admin_authenticated' not in st.session_state: st.session_state['admin_authenticated'] = False
+if 'availability_data' not in st.session_state: st.session_state['availability_data'] = None
+if 'admin_data' not in st.session_state: st.session_state['admin_data'] = None
+if 'last_language' not in st.session_state: st.session_state['last_language'] = None
 
+
+# --- Sidebar ---
 st.sidebar.header("Options")
 selected_language = st.sidebar.selectbox("Select language", options=LANGUAGES)
 selected_timezone_friendly = st.sidebar.selectbox("Select your timezone", options=TIMEZONE_OPTIONS.keys(), index=list(TIMEZONE_OPTIONS.keys()).index(DEFAULT_TIMEZONE_FRIENDLY))
 selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
 
-if st.sidebar.button("Refresh Availability"):
-    team_members = get_filtered_team_members()
+# --- Main Logic ---
+team_members = get_filtered_team_members()
+calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
+
+# --- UPDATE: Automatic data loading and state management ---
+# Load data automatically on first run or when the language changes, or when refresh is clicked
+if st.sidebar.button("Refresh Availability") or st.session_state['availability_data'] is None or st.session_state['last_language'] != selected_language:
     if not team_members:
         st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
     else:
         with st.spinner(f"Fetching availability for {selected_language}..."):
-            calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
             all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
-
-        if not all_slots:
-            st.info(f"No upcoming availability found for **{selected_language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
-        else:
-            slots_by_day = defaultdict(list)
-            working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, selected_timezone)
-            for slot in all_slots:
-                day = slot["dateTime"].astimezone(selected_timezone).date()
-                if day in working_days:
-                    slots_by_day[day].append(slot)
-            
-            if not slots_by_day:
-                 st.info(f"No upcoming availability found for **{selected_language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
-                 st.stop()
-
-            st.header(f"Available Slots for {selected_language}")
-            st.write(f"Times are shown in **{selected_timezone_friendly}**.")
-            st.divider()
-            for day in working_days:
-                if day in slots_by_day:
-                    st.subheader(day.strftime('%A, %d %B %Y'))
-                    day_slots = slots_by_day[day]
-                    unique_times = sorted(list(set(s['dateTime'].astimezone(selected_timezone).strftime('%H:%M') for s in day_slots)))
-                    cols = st.columns(5)
-                    for i, time_str in enumerate(unique_times):
-                        cols[i % 5].markdown(f"<div style='text-align: center; border: 1px solid #e0e0e0; border-radius: 5px; padding: 10px; margin-bottom: 10px;'><b>{time_str}</b></div>", unsafe_allow_html=True)
-                    st.divider()
-
-            st.header("Summary of Daily Availability")
-            summary_data = []
-            for day in working_days:
-                 if day in slots_by_day:
-                    day_slots = slots_by_day[day]
-                    slots_by_specialist = defaultdict(list)
-                    for slot in day_slots:
-                        slots_by_specialist[slot['specialist']].append(slot['dateTime'])
-                    total_true_slots = sum(calculate_true_slots(s_slots) for s_slots in slots_by_specialist.values())
-                    summary_data.append({"Date": day.strftime('%A, %d %B'), "Bookable Slots": total_true_slots})
-            if summary_data:
-                st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
+            st.session_state['availability_data'] = all_slots
+            st.session_state['last_language'] = selected_language
 else:
-    st.info("Select your options and click 'Refresh Availability' in the sidebar.")
+    st.info("Displaying cached data. Click 'Refresh Availability' for the latest.")
+
+
+# Display main content if data exists
+if st.session_state['availability_data'] is not None:
+    if not st.session_state['availability_data']:
+         st.info(f"No upcoming availability found for **{selected_language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
+    else:
+        display_main_availability(st.session_state['availability_data'], selected_language, selected_timezone, selected_timezone_friendly)
+else:
+     st.info("Select your options and click 'Refresh Availability' in the sidebar to load data.")
+
 
 # --- Admin Section ---
 st.sidebar.divider()
@@ -316,6 +357,8 @@ password = st.sidebar.text_input("Enter password", type="password")
 if st.sidebar.button("Unlock Admin View"):
     if password == ADMIN_PASSWORD:
         st.session_state['admin_authenticated'] = True
+        # Clear admin data on new login to force a refresh
+        st.session_state['admin_data'] = None
     else:
         st.sidebar.error("Incorrect password.")
         st.session_state['admin_authenticated'] = False
@@ -324,20 +367,28 @@ if st.session_state.get('admin_authenticated'):
     st.sidebar.success("Admin view unlocked!")
     st.divider()
     st.header("🔒 Admin View")
-    
-    active_team_members = get_filtered_team_members()
-    with st.spinner("Fetching all team availability for admin view..."):
-        calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
-        admin_availability, raw_slots = fetch_all_team_availability(active_team_members, calendly_api_key)
+
+    # Load admin data only once per session or on re-login
+    if st.session_state['admin_data'] is None:
+        with st.spinner("Fetching all team availability for admin view..."):
+            active_team_members = get_filtered_team_members()
+            admin_availability, raw_slots = fetch_all_team_availability(active_team_members, calendly_api_key)
+            st.session_state['admin_data'] = (admin_availability, raw_slots)
+    else:
+        st.info("Displaying cached admin data.")
+
+    admin_availability, raw_slots = st.session_state['admin_data']
     
     if not admin_availability:
         st.warning("No availability found for any team member.")
     else:
+        active_team_members = get_filtered_team_members()
         uk_timezone = pytz.timezone("Europe/London")
         working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, uk_timezone)
         
         st.subheader("Team Summary by Language")
         st.write("Total bookable slots for the entire team.")
+        st.info("💡 For the best experience, view these tables on a desktop computer.")
         
         lang_summary_slots = defaultdict(lambda: defaultdict(int))
         slots_by_specialist_day = defaultdict(lambda: defaultdict(list))
@@ -365,14 +416,10 @@ if st.session_state.get('admin_authenticated'):
             summary_data.append(row)
         summary_df = pd.DataFrame(summary_data).set_index("Language")
 
-        # --- UPDATE: New summary table coloring ---
         def color_summary_cells(val):
-            if val == 0:
-                return 'background-color: #ffcccb'  # Light Red
-            elif 1 <= val <= 4:
-                return 'background-color: #d4edda'  # Light Green
-            else: # 5+
-                return 'background-color: #28a745; color: white;' # Dark Green
+            if val == 0: return 'background-color: #ffcccb'
+            elif 1 <= val <= 4: return 'background-color: #d4edda'
+            else: return 'background-color: #28a745; color: white;'
 
         st.dataframe(summary_df.style.applymap(color_summary_cells), use_container_width=True)
         st.divider()
@@ -391,12 +438,9 @@ if st.session_state.get('admin_authenticated'):
         heatmap_df = pd.DataFrame(heatmap_data).T
         
         def color_heatmap_cells(val):
-            if val == 0:
-                return 'background-color: #ffcccb'
-            elif 1 <= val <= 2:
-                return 'background-color: #d4edda'
-            else:
-                return 'background-color: #28a745; color: white;'
+            if val == 0: return 'background-color: #ffcccb'
+            elif 1 <= val <= 2: return 'background-color: #d4edda'
+            else: return 'background-color: #28a745; color: white;'
         
         st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
         st.divider()
