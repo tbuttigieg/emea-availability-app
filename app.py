@@ -269,23 +269,9 @@ def display_main_availability(all_slots, language, timezone, timezone_friendly):
             day_slots = slots_by_day[day]
             unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots)))
             
-            # --- UPDATE: Use st.chip for mobile-friendly time slots ---
-            # Create a container for the chips to flow correctly
-            container = st.container()
-            # A bit of custom CSS to make the chips look nice and wrap
-            container.markdown("""
-                <style>
-                    .stChip {
-                        display: inline-flex;
-                        margin: 5px;
-                    }
-                </style>
-            """, unsafe_allow_html=True)
-
-            with container:
-                # Use columns on larger screens, but this will wrap on mobile
-                 for time_str in unique_times:
-                    st.chip(label=time_str, icon="🕒")
+            # --- FIX: Revert from st.chip to a more compatible flexbox layout ---
+            time_tags = "".join([f"<div style='border: 1px solid #e0e0e0; border-radius: 5px; padding: 8px 12px; margin: 4px; font-weight: 500;'>🕒 {time_str}</div>" for time_str in unique_times])
+            st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{time_tags}</div>", unsafe_allow_html=True)
             
             st.divider()
 
