@@ -269,7 +269,6 @@ def display_main_availability(all_slots, language, timezone, timezone_friendly):
             day_slots = slots_by_day[day]
             unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots)))
             
-            # --- FIX: Revert from st.chip to a more compatible flexbox layout ---
             time_tags = "".join([f"<div style='border: 1px solid #e0e0e0; border-radius: 5px; padding: 8px 12px; margin: 4px; font-weight: 500;'>🕒 {time_str}</div>" for time_str in unique_times])
             st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{time_tags}</div>", unsafe_allow_html=True)
             
@@ -403,8 +402,8 @@ if st.session_state.get('admin_authenticated'):
         summary_df = pd.DataFrame(summary_data).set_index("Language")
 
         def color_summary_cells(val):
-            if val == 0: return 'background-color: #ffcccb'
-            elif 1 <= val <= 4: return 'background-color: #d4edda'
+            if val == 0: return 'background-color: #ffcccb; color: black;'
+            elif 1 <= val <= 4: return 'background-color: #d4edda; color: black;'
             else: return 'background-color: #28a745; color: white;'
 
         st.dataframe(summary_df.style.applymap(color_summary_cells), use_container_width=True)
@@ -424,8 +423,8 @@ if st.session_state.get('admin_authenticated'):
         heatmap_df = pd.DataFrame(heatmap_data).T
         
         def color_heatmap_cells(val):
-            if val == 0: return 'background-color: #ffcccb'
-            elif 1 <= val <= 2: return 'background-color: #d4edda'
+            if val == 0: return 'background-color: #ffcccb; color: black;'
+            elif 1 <= val <= 2: return 'background-color: #d4edda; color: black;'
             else: return 'background-color: #28a745; color: white;'
         
         st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
