@@ -248,6 +248,9 @@ def get_next_working_days(n, timezone):
 # --- UI HELPER FUNCTIONS ---
 def display_main_availability(all_slots, language, timezone, timezone_friendly):
     """Renders the main availability view for a selected language."""
+    if all_slots is None:
+        return # Don't display anything if data is not loaded yet
+
     slots_by_day = defaultdict(list)
     working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, timezone)
     for slot in all_slots:
@@ -293,11 +296,15 @@ def display_main_availability(all_slots, language, timezone, timezone_friendly):
 st.set_page_config(layout="wide")
 st.title("EMEA Onboarding Team Availability")
 
-# Initialize session state
-if 'admin_authenticated' not in st.session_state: st.session_state['admin_authenticated'] = False
-if 'availability_data' not in st.session_state: st.session_state['availability_data'] = None
-if 'admin_data' not in st.session_state: st.session_state['admin_data'] = None
-if 'last_language' not in st.session_state: st.session_state['last_language'] = None
+# Initialize session state for the first run of the session
+if 'last_params' not in st.session_state:
+    st.session_state['last_params'] = {}
+if 'availability_data' not in st.session_state:
+    st.session_state['availability_data'] = None
+if 'admin_authenticated' not in st.session_state: 
+    st.session_state['admin_authenticated'] = False
+if 'admin_data' not in st.session_state: 
+    st.session_state['admin_data'] = None
 
 
 # --- Sidebar ---
@@ -310,28 +317,27 @@ selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
 team_members = get_filtered_team_members()
 calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
 
-# --- UPDATE: Automatic data loading and state management ---
-# Load data automatically on first run or when the language changes, or when refresh is clicked
-if st.sidebar.button("Refresh Availability") or st.session_state['availability_data'] is None or st.session_state['last_language'] != selected_language:
+# --- NEW: Reactive data loading ---
+# Check if dropdowns have changed since the last run, or if it's the first run
+current_params = {'lang': selected_language, 'tz': selected_timezone_friendly}
+if current_params != st.session_state.get('last_params'):
+    # Invalidate data if params changed, forcing a refresh
+    st.session_state['availability_data'] = None 
+    st.session_state['admin_data'] = None # Also clear admin data if params change
+
+# Fetch data if it's invalid (None)
+if st.session_state['availability_data'] is None:
     if not team_members:
         st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
     else:
-        with st.spinner(f"Fetching availability for {selected_language}..."):
+        with st.spinner(f"Fetching latest availability for {selected_language}..."):
             all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
             st.session_state['availability_data'] = all_slots
-            st.session_state['last_language'] = selected_language
-else:
-    st.info("Displaying cached data. Click 'Refresh Availability' for the latest.")
+            # Store the current params to detect future changes
+            st.session_state['last_params'] = current_params
 
-
-# Display main content if data exists
-if st.session_state['availability_data'] is not None:
-    if not st.session_state['availability_data']:
-         st.info(f"No upcoming availability found for **{selected_language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
-    else:
-        display_main_availability(st.session_state['availability_data'], selected_language, selected_timezone, selected_timezone_friendly)
-else:
-     st.info("Select your options and click 'Refresh Availability' in the sidebar to load data.")
+# Display main content
+display_main_availability(st.session_state['availability_data'], selected_language, selected_timezone, selected_timezone_friendly)
 
 
 # --- Admin Section ---
@@ -343,7 +349,7 @@ if st.sidebar.button("Unlock Admin View"):
     if password == ADMIN_PASSWORD:
         st.session_state['admin_authenticated'] = True
         # Clear admin data on new login to force a refresh
-        st.session_state['admin_data'] = None
+        st.session_state['admin_data'] = None 
     else:
         st.sidebar.error("Incorrect password.")
         st.session_state['admin_authenticated'] = False
@@ -353,14 +359,12 @@ if st.session_state.get('admin_authenticated'):
     st.divider()
     st.header("🔒 Admin View")
 
-    # Load admin data only once per session or on re-login
+    # Load admin data only once per session or on re-login/param change
     if st.session_state['admin_data'] is None:
         with st.spinner("Fetching all team availability for admin view..."):
             active_team_members = get_filtered_team_members()
             admin_availability, raw_slots = fetch_all_team_availability(active_team_members, calendly_api_key)
             st.session_state['admin_data'] = (admin_availability, raw_slots)
-    else:
-        st.info("Displaying cached admin data.")
 
     admin_availability, raw_slots = st.session_state['admin_data']
     
