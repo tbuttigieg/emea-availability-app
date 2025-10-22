@@ -154,8 +154,6 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
     all_slots = []
     base_url = "https://api.calendly.com/event_type_available_times"
     
-    # --- REMOVED: Internal format_to_iso_z function, now uses global one ---
-    
     loop_start_date = start_date
     while loop_start_date < end_date:
         loop_end_date = loop_start_date + timedelta(days=7)
@@ -174,7 +172,8 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
                 if slot.get("status") == "available":
                     start_time_str = slot["start_time"].replace('Z', '+00:00')
                     all_slots.append(datetime.fromisoformat(start_time_str))
-        except requests.exceptions.HTTPError: pass
+        except requests.exceptions.HTTPError: 
+            pass # Silently fail on availability, as it's less critical
         loop_start_date += timedelta(days=7)
     return all_slots
 
@@ -188,10 +187,9 @@ def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
     
     params = {
         'user': user_uri,
-        # --- FIXED: Use the correct global timestamp formatter ---
         'min_start_time': format_to_iso_z(start_date),
         'max_start_time': format_to_iso_z(end_date),
-        'count': 100 # Request max number of events per page
+        'count': 100 
     }
     
     count_60_min_plus = 0
@@ -199,7 +197,7 @@ def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
     while base_url:
         try:
             response = requests.get(base_url, headers=headers, params=params)
-            response.raise_for_status()
+            response.raise_for_status() # This will raise an error for 4xx or 5xx
             data = response.json()
             
             for event in data.get("collection", []):
@@ -217,12 +215,21 @@ def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
                 except Exception:
                     pass # Skip event if times are not as expected
 
-            # Handle pagination
             base_url = data.get("pagination", {}).get("next_page")
-            params = {} # Subsequent requests use the full URL from pagination
+            params = {} 
             
-        except requests.exceptions.HTTPError:
+        except requests.exceptions.HTTPError as e:
+            # --- NEW: Added error logging ---
+            if e.response.status_code == 403:
+                # Use st.error in the main thread via session state if needed, 
+                # but for simplicity, we'll just log to console here (Streamlit Cloud logs)
+                print(f"Error for {user_uri}: 403 Forbidden. The API key may not have permission to view this user's scheduled events. This report requires an Organization Admin token.")
+            else:
+                print(f"HTTP Error fetching scheduled events for {user_uri}: {e}")
             base_url = None # Stop loop on error
+        except Exception as e:
+            print(f"A non-HTTP error occurred: {e}")
+            base_url = None
             
     return count_60_min_plus
 
@@ -252,35 +259,27 @@ def fetch_all_team_availability(team_members, api_key):
     """
     utc, now = pytz.UTC, datetime.now(pytz.UTC)
     
-    # --- Date ranges ---
-    # Availability window (future slots)
     min_availability_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
     api_availability_start = now + timedelta(minutes=1)
     api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
     
-    # Scheduled events window (e.g., next 10 working days)
     api_scheduled_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) # A bit of buffer
+    api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
     
-    # --- Data collectors ---
     availability_by_specialist = defaultdict(list)
     raw_slots_for_summary = []
-    booked_event_counts = {} # <-- NEW collector
+    booked_event_counts = {} 
 
     with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
         args = [(m, api_key) for m in team_members]
         
-        # This function now does two jobs
         def fetch_and_process(member, key):
-            # Job 1: Get available slots
             available_slots = get_user_availability(
                 member["soloEventUri"], 
                 api_availability_start, 
                 api_availability_end, 
                 key
             )
-            
-            # Job 2: Get count of booked appointments
             booked_count = fetch_scheduled_events(
                 member["userUri"],
                 api_scheduled_start,
@@ -292,14 +291,11 @@ def fetch_all_team_availability(team_members, api_key):
         results = executor.map(lambda p: fetch_and_process(*p), args)
 
         for member, user_slots, booked_count in results:
-            # Process Job 1 results
             for slot_time in user_slots:
                 if slot_time >= min_availability_time:
                     availability_by_specialist[member["name"]].append(slot_time)
                     raw_slots_for_summary.append({"specialist_info": member, "dateTime": slot_time})
-            
-            # Process Job 2 results
-            booked_event_counts[member["name"]] = booked_count
+            booked_event_counts[member["name"]] = booked.get(booked_count, 0) # Handle potential None
 
     return availability_by_specialist, raw_slots_for_summary, booked_event_counts
 
@@ -400,14 +396,11 @@ team_members = get_filtered_team_members()
 calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
 
 # --- NEW: Reactive data loading ---
-# Check if dropdowns have changed since the last run, or if it's the first run
 current_params = {'lang': selected_language, 'tz': selected_timezone_friendly}
 if current_params != st.session_state.get('last_params'):
-    # Invalidate data if params changed, forcing a refresh
     st.session_state['availability_data'] = None 
-    st.session_state['admin_data'] = None # Also clear admin data if params change
+    st.session_state['admin_data'] = None 
 
-# Fetch data if it's invalid (None)
 if st.session_state['availability_data'] is None:
     if not team_members:
         st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
@@ -415,10 +408,8 @@ if st.session_state['availability_data'] is None:
         with st.spinner(f"Fetching latest availability for {selected_language}..."):
             all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
             st.session_state['availability_data'] = all_slots
-            # Store the current params to detect future changes
             st.session_state['last_params'] = current_params
 
-# Display main content
 display_main_availability(st.session_state['availability_data'], selected_language, selected_timezone, selected_timezone_friendly)
 
 
@@ -430,7 +421,6 @@ password = st.sidebar.text_input("Enter password", type="password")
 if st.sidebar.button("Unlock Admin View"):
     if password == ADMIN_PASSWORD:
         st.session_state['admin_authenticated'] = True
-        # Clear admin data on new login to force a refresh
         st.session_state['admin_data'] = None 
     else:
         st.sidebar.error("Incorrect password.")
@@ -441,18 +431,15 @@ if st.session_state.get('admin_authenticated'):
     st.divider()
     st.header("🔒 Admin View")
 
-    # Load admin data only once per session or on re-login/param change
     if st.session_state['admin_data'] is None:
         with st.spinner("Fetching all team availability for admin view..."):
             active_team_members = get_filtered_team_members()
-            # --- MODIFIED: Now fetches 3 pieces of data ---
             admin_availability, raw_slots, booked_counts = fetch_all_team_availability(
                 active_team_members, 
                 calendly_api_key
             )
             st.session_state['admin_data'] = (admin_availability, raw_slots, booked_counts)
 
-    # --- MODIFIED: Now unpacks 3 pieces of data ---
     admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
     
     if not admin_availability and not any(booked_counts.values()):
@@ -521,27 +508,28 @@ if st.session_state.get('admin_authenticated'):
         st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
         st.divider()
         
-        # --- NEW REPORT SECTION ---
+        # --- BOOKED APPOINTMENTS REPORT ---
         st.subheader("Booked Appointments Report")
         st.write(f"Total count of booked appointments 60 minutes or longer in the next {WORKING_DAYS_TO_CHECK} working days.")
         
-        # Sort the dictionary by specialist name
-        sorted_booked_counts = dict(sorted(booked_counts.items()))
-        
-        report_data = []
-        for specialist, count in sorted_booked_counts.items():
-            report_data.append({"Specialist": specialist, "Booked Appointments (60+ min)": count})
-            
-        report_df = pd.DataFrame(report_data)
-        st.dataframe(report_df, use_container_width=True, hide_index=True)
+        # Ensure booked_counts is not None and sort it
+        if booked_counts:
+            sorted_booked_counts = dict(sorted(booked_counts.items()))
+            report_data = []
+            for specialist, count in sorted_booked_counts.items():
+                report_data.append({"Specialist": specialist, "Booked Appointments (60+ min)": count})
+            report_df = pd.DataFrame(report_data)
+            st.dataframe(report_df, use_container_width=True, hide_index=True)
+        else:
+            st.write("No booked event data was returned.")
         st.divider()
-        # --- END OF NEW REPORT SECTION ---
+        # --- END OF REPORT ---
 
         st.subheader("Detailed Specialist Availability")
         sorted_specialists = sorted(admin_availability.keys())
         for specialist in sorted_specialists:
-            with st.expander(f"**{specialist}** - {len(admin_availability[specialist])} available slots found"):
-                slots = admin_availability[specialist]
+            with st.expander(f"**{specialist}** - {len(admin_availability.get(specialist, []))} available slots found"):
+                slots = admin_availability.get(specialist)
                 if not slots:
                     st.write("No availability in the upcoming period.")
                     continue
