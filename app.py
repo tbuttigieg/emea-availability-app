@@ -295,7 +295,7 @@ def fetch_all_team_availability(team_members, api_key):
                 if slot_time >= min_availability_time:
                     availability_by_specialist[member["name"]].append(slot_time)
                     raw_slots_for_summary.append({"specialist_info": member, "dateTime": slot_time})
-            booked_event_counts[member["name"]] = booked.get(booked_count, 0) # Handle potential None
+            booked_event_counts[member["name"]] = booked_count # Handle potential None
 
     return availability_by_specialist, raw_slots_for_summary, booked_event_counts
 
@@ -549,4 +549,5 @@ if st.session_state.get('admin_authenticated'):
                         day_slots = sorted(slots_by_day[day])
                         time_strings = [f"`{s.strftime('%H:%M')}`" for s in day_slots]
                         st.write(" | ".join(time_strings))
+
 
