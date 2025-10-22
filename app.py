@@ -131,6 +131,11 @@ TIMEZONE_OPTIONS = {
 }
 DEFAULT_TIMEZONE_FRIENDLY = "GMT / BST (London, Dublin)"
 
+# --- NEW GLOBAL HELPER ---
+def format_to_iso_z(dt):
+    """Formats a datetime object to the ISO Z format Calendly expects."""
+    return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+
 # --- CORE FUNCTIONS ---
 
 def get_filtered_team_members():
@@ -148,9 +153,8 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     all_slots = []
     base_url = "https://api.calendly.com/event_type_available_times"
-
-    def format_to_iso_z(dt):
-        return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    
+    # --- REMOVED: Internal format_to_iso_z function, now uses global one ---
     
     loop_start_date = start_date
     while loop_start_date < end_date:
@@ -174,7 +178,6 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
         loop_start_date += timedelta(days=7)
     return all_slots
 
-# --- NEW FUNCTION ---
 @st.cache_data(ttl=600)
 def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
     """Fetches booked appointments for a user and counts those 60 min or longer."""
@@ -185,8 +188,9 @@ def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
     
     params = {
         'user': user_uri,
-        'min_start_time': start_date.isoformat(),
-        'max_start_time': end_date.isoformat(),
+        # --- FIXED: Use the correct global timestamp formatter ---
+        'min_start_time': format_to_iso_z(start_date),
+        'max_start_time': format_to_iso_z(end_date),
         'count': 100 # Request max number of events per page
     }
     
@@ -255,7 +259,6 @@ def fetch_all_team_availability(team_members, api_key):
     api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
     
     # Scheduled events window (e.g., next 10 working days)
-    # We use a simple date range for this, not just working days, to capture all events
     api_scheduled_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) # A bit of buffer
     
@@ -452,8 +455,8 @@ if st.session_state.get('admin_authenticated'):
     # --- MODIFIED: Now unpacks 3 pieces of data ---
     admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
     
-    if not admin_availability:
-        st.warning("No availability found for any team member.")
+    if not admin_availability and not any(booked_counts.values()):
+        st.warning("No availability or booked events found for any team member.")
     else:
         active_team_members = get_filtered_team_members()
         uk_timezone = pytz.timezone("Europe/London")
