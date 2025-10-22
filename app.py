@@ -174,6 +174,54 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
         loop_start_date += timedelta(days=7)
     return all_slots
 
+# --- NEW FUNCTION ---
+@st.cache_data(ttl=600)
+def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
+    """Fetches booked appointments for a user and counts those 60 min or longer."""
+    if not api_key or not user_uri: return 0
+
+    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+    base_url = "https://api.calendly.com/scheduled_events"
+    
+    params = {
+        'user': user_uri,
+        'min_start_time': start_date.isoformat(),
+        'max_start_time': end_date.isoformat(),
+        'count': 100 # Request max number of events per page
+    }
+    
+    count_60_min_plus = 0
+    
+    while base_url:
+        try:
+            response = requests.get(base_url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+            
+            for event in data.get("collection", []):
+                try:
+                    start_str = event['start_time'].replace('Z', '+00:00')
+                    end_str = event['end_time'].replace('Z', '+00:00')
+                    
+                    start_time = datetime.fromisoformat(start_str)
+                    end_time = datetime.fromisoformat(end_str)
+                    
+                    duration_minutes = (end_time - start_time).total_seconds() / 60
+                    
+                    if duration_minutes >= 60:
+                        count_60_min_plus += 1
+                except Exception:
+                    pass # Skip event if times are not as expected
+
+            # Handle pagination
+            base_url = data.get("pagination", {}).get("next_page")
+            params = {} # Subsequent requests use the full URL from pagination
+            
+        except requests.exceptions.HTTPError:
+            base_url = None # Stop loop on error
+            
+    return count_60_min_plus
+
 def fetch_language_availability(team_members, api_key, selected_language):
     """Fetches availability for a single language using concurrent API calls for speed."""
     utc, now = pytz.UTC, datetime.now(pytz.UTC)
@@ -195,31 +243,62 @@ def fetch_language_availability(team_members, api_key, selected_language):
     return language_slots
 
 def fetch_all_team_availability(team_members, api_key):
-    """Fetches availability for all team members concurrently, applying the minimum notice period."""
+    """
+    Fetches availability AND scheduled events for all team members concurrently.
+    """
     utc, now = pytz.UTC, datetime.now(pytz.UTC)
-    minimum_booking_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_start_date = now + timedelta(minutes=1)
-    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
     
+    # --- Date ranges ---
+    # Availability window (future slots)
+    min_availability_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
+    api_availability_start = now + timedelta(minutes=1)
+    api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
+    
+    # Scheduled events window (e.g., next 10 working days)
+    # We use a simple date range for this, not just working days, to capture all events
+    api_scheduled_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) # A bit of buffer
+    
+    # --- Data collectors ---
     availability_by_specialist = defaultdict(list)
     raw_slots_for_summary = []
+    booked_event_counts = {} # <-- NEW collector
 
     with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
-        args = [(m, api_start_date, api_end_date, api_key) for m in team_members]
+        args = [(m, api_key) for m in team_members]
         
-        def fetch_and_process(member, start, end, key):
-            slots = get_user_availability(member["soloEventUri"], start, end, key)
-            return member, slots
+        # This function now does two jobs
+        def fetch_and_process(member, key):
+            # Job 1: Get available slots
+            available_slots = get_user_availability(
+                member["soloEventUri"], 
+                api_availability_start, 
+                api_availability_end, 
+                key
+            )
+            
+            # Job 2: Get count of booked appointments
+            booked_count = fetch_scheduled_events(
+                member["userUri"],
+                api_scheduled_start,
+                api_scheduled_end,
+                key
+            )
+            return member, available_slots, booked_count
 
         results = executor.map(lambda p: fetch_and_process(*p), args)
 
-        for member, user_slots in results:
+        for member, user_slots, booked_count in results:
+            # Process Job 1 results
             for slot_time in user_slots:
-                if slot_time >= minimum_booking_time:
+                if slot_time >= min_availability_time:
                     availability_by_specialist[member["name"]].append(slot_time)
                     raw_slots_for_summary.append({"specialist_info": member, "dateTime": slot_time})
+            
+            # Process Job 2 results
+            booked_event_counts[member["name"]] = booked_count
 
-    return availability_by_specialist, raw_slots_for_summary
+    return availability_by_specialist, raw_slots_for_summary, booked_event_counts
 
 
 def calculate_true_slots(date_times):
@@ -363,10 +442,15 @@ if st.session_state.get('admin_authenticated'):
     if st.session_state['admin_data'] is None:
         with st.spinner("Fetching all team availability for admin view..."):
             active_team_members = get_filtered_team_members()
-            admin_availability, raw_slots = fetch_all_team_availability(active_team_members, calendly_api_key)
-            st.session_state['admin_data'] = (admin_availability, raw_slots)
+            # --- MODIFIED: Now fetches 3 pieces of data ---
+            admin_availability, raw_slots, booked_counts = fetch_all_team_availability(
+                active_team_members, 
+                calendly_api_key
+            )
+            st.session_state['admin_data'] = (admin_availability, raw_slots, booked_counts)
 
-    admin_availability, raw_slots = st.session_state['admin_data']
+    # --- MODIFIED: Now unpacks 3 pieces of data ---
+    admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
     
     if not admin_availability:
         st.warning("No availability found for any team member.")
@@ -433,6 +517,22 @@ if st.session_state.get('admin_authenticated'):
         
         st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
         st.divider()
+        
+        # --- NEW REPORT SECTION ---
+        st.subheader("Booked Appointments Report")
+        st.write(f"Total count of booked appointments 60 minutes or longer in the next {WORKING_DAYS_TO_CHECK} working days.")
+        
+        # Sort the dictionary by specialist name
+        sorted_booked_counts = dict(sorted(booked_counts.items()))
+        
+        report_data = []
+        for specialist, count in sorted_booked_counts.items():
+            report_data.append({"Specialist": specialist, "Booked Appointments (60+ min)": count})
+            
+        report_df = pd.DataFrame(report_data)
+        st.dataframe(report_df, use_container_width=True, hide_index=True)
+        st.divider()
+        # --- END OF NEW REPORT SECTION ---
 
         st.subheader("Detailed Specialist Availability")
         sorted_specialists = sorted(admin_availability.keys())
