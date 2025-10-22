@@ -131,7 +131,7 @@ TIMEZONE_OPTIONS = {
 }
 DEFAULT_TIMEZONE_FRIENDLY = "GMT / BST (London, Dublin)"
 
-# --- NEW GLOBAL HELPER ---
+# --- GLOBAL HELPER ---
 def format_to_iso_z(dt):
     """Formats a datetime object to the ISO Z format Calendly expects."""
     return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
@@ -177,41 +177,63 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
         loop_start_date += timedelta(days=7)
     return all_slots
 
+# --- NEW: Admin-only function to get Organization URI ---
+@st.cache_data(ttl=3600) # Cache this for an hour
+def get_organization_uri(api_key):
+    """Fetches the organization URI associated with the API key."""
+    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+    url = "https://api.calendly.com/users/me"
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json().get("resource", {}).get("current_organization")
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 401:
+             st.error("Invalid API Key. Please check your Streamlit secrets.", icon="🚨")
+        else:
+             st.error(f"Calendly API Error (User): {e.response.json().get('message', 'Unknown Error')}", icon="🚨")
+        return None
+
+# --- NEW: Re-architected function to fetch ALL scheduled events ---
 @st.cache_data(ttl=600)
-def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
-    """Fetches booked appointments for a user and counts those 60 min or longer."""
-    if not api_key or not user_uri: return 0
+def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
+    """
+    Fetches all booked appointments for an entire organization and
+    returns a count of long events per user URI.
+    """
+    counts_by_user_uri = defaultdict(int)
+    if not api_key or not organization_uri: 
+        return counts_by_user_uri
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     base_url = "https://api.calendly.com/scheduled_events"
     
     params = {
-        'user': user_uri,
+        'organization': organization_uri,
         'min_start_time': format_to_iso_z(start_date),
         'max_start_time': format_to_iso_z(end_date),
         'count': 100 
     }
     
-    count_60_min_plus = 0
-    
     while base_url:
         try:
             response = requests.get(base_url, headers=headers, params=params)
-            response.raise_for_status() # This will raise an error for 4xx or 5xx
+            response.raise_for_status() 
             data = response.json()
             
             for event in data.get("collection", []):
                 try:
                     start_str = event['start_time'].replace('Z', '+00:00')
                     end_str = event['end_time'].replace('Z', '+00:00')
-                    
                     start_time = datetime.fromisoformat(start_str)
                     end_time = datetime.fromisoformat(end_str)
-                    
                     duration_minutes = (end_time - start_time).total_seconds() / 60
                     
                     if duration_minutes >= 60:
-                        count_60_min_plus += 1
+                        # Find the user URI from the event memberships
+                        user_uri = event.get("event_memberships", [{}])[0].get("user")
+                        if user_uri:
+                            counts_by_user_uri[user_uri] += 1
                 except Exception:
                     pass # Skip event if times are not as expected
 
@@ -219,19 +241,16 @@ def fetch_scheduled_events(user_uri, start_date, end_date, api_key):
             params = {} 
             
         except requests.exceptions.HTTPError as e:
-            # --- NEW: Added error logging ---
             if e.response.status_code == 403:
-                # Use st.error in the main thread via session state if needed, 
-                # but for simplicity, we'll just log to console here (Streamlit Cloud logs)
-                print(f"Error for {user_uri}: 403 Forbidden. The API key may not have permission to view this user's scheduled events. This report requires an Organization Admin token.")
+                 st.error("API Key Error: This key does not have Organization-level permission to read scheduled events for all users. Please use an Admin-generated token.", icon="🚨")
             else:
-                print(f"HTTP Error fetching scheduled events for {user_uri}: {e}")
+                 st.error(f"Calendly API Error (Events): {e.response.json().get('message', 'Unknown Error')}", icon="🚨")
             base_url = None # Stop loop on error
         except Exception as e:
-            print(f"A non-HTTP error occurred: {e}")
+            st.error(f"A non-HTTP error occurred: {e}", icon="🚨")
             base_url = None
             
-    return count_60_min_plus
+    return counts_by_user_uri
 
 def fetch_language_availability(team_members, api_key, selected_language):
     """Fetches availability for a single language using concurrent API calls for speed."""
@@ -253,12 +272,15 @@ def fetch_language_availability(team_members, api_key, selected_language):
     language_slots.sort(key=lambda x: x["dateTime"])
     return language_slots
 
+# --- MODIFIED: Admin data fetching function ---
 def fetch_all_team_availability(team_members, api_key):
     """
-    Fetches availability AND scheduled events for all team members concurrently.
+    Fetches availability (concurrently) AND all scheduled events (one big call) 
+    for all team members.
     """
     utc, now = pytz.UTC, datetime.now(pytz.UTC)
     
+    # --- Date ranges ---
     min_availability_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
     api_availability_start = now + timedelta(minutes=1)
     api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
@@ -266,36 +288,50 @@ def fetch_all_team_availability(team_members, api_key):
     api_scheduled_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
     
+    # --- Data collectors ---
     availability_by_specialist = defaultdict(list)
     raw_slots_for_summary = []
-    booked_event_counts = {} 
+    booked_event_counts = {} # This will be counts by NAME
 
+    # --- Job 1: Fetch availability concurrently (one call per user) ---
     with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
         args = [(m, api_key) for m in team_members]
         
-        def fetch_and_process(member, key):
+        def fetch_availability(member, key):
             available_slots = get_user_availability(
                 member["soloEventUri"], 
                 api_availability_start, 
                 api_availability_end, 
                 key
             )
-            booked_count = fetch_scheduled_events(
-                member["userUri"],
-                api_scheduled_start,
-                api_scheduled_end,
-                key
-            )
-            return member, available_slots, booked_count
+            return member, available_slots
 
-        results = executor.map(lambda p: fetch_and_process(*p), args)
+        results = executor.map(lambda p: fetch_availability(*p), args)
 
-        for member, user_slots, booked_count in results:
+        for member, user_slots in results:
             for slot_time in user_slots:
                 if slot_time >= min_availability_time:
                     availability_by_specialist[member["name"]].append(slot_time)
                     raw_slots_for_summary.append({"specialist_info": member, "dateTime": slot_time})
-            booked_event_counts[member["name"]] = booked_count # Handle potential None
+    
+    # --- Job 2: Fetch all scheduled events (one org-level call) ---
+    organization_uri = get_organization_uri(api_key)
+    if organization_uri:
+        counts_by_user_uri = fetch_all_scheduled_events(
+            organization_uri,
+            api_scheduled_start,
+            api_scheduled_end,
+            api_key
+        )
+        
+        # Create a map to link User URI back to Specialist Name
+        user_uri_to_name = {m['userUri']: m['name'] for m in team_members}
+        
+        # Populate the final booked_event_counts by name
+        for uri, count in counts_by_user_uri.items():
+            if uri in user_uri_to_name:
+                name = user_uri_to_name[uri]
+                booked_event_counts[name] = count
 
     return availability_by_specialist, raw_slots_for_summary, booked_event_counts
 
@@ -442,7 +478,7 @@ if st.session_state.get('admin_authenticated'):
 
     admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
     
-    if not admin_availability and not any(booked_counts.values()):
+    if not admin_availability and not booked_counts:
         st.warning("No availability or booked events found for any team member.")
     else:
         active_team_members = get_filtered_team_members()
@@ -512,16 +548,16 @@ if st.session_state.get('admin_authenticated'):
         st.subheader("Booked Appointments Report")
         st.write(f"Total count of booked appointments 60 minutes or longer in the next {WORKING_DAYS_TO_CHECK} working days.")
         
-        # Ensure booked_counts is not None and sort it
-        if booked_counts:
-            sorted_booked_counts = dict(sorted(booked_counts.items()))
-            report_data = []
-            for specialist, count in sorted_booked_counts.items():
-                report_data.append({"Specialist": specialist, "Booked Appointments (60+ min)": count})
-            report_df = pd.DataFrame(report_data)
-            st.dataframe(report_df, use_container_width=True, hide_index=True)
-        else:
-            st.write("No booked event data was returned.")
+        report_data = []
+        # Use .get(name, 0) to handle specialists with no booked events
+        for specialist in sorted([m['name'] for m in active_team_members]):
+            report_data.append({
+                "Specialist": specialist, 
+                "Booked Appointments (60+ min)": booked_counts.get(specialist, 0)
+            })
+            
+        report_df = pd.DataFrame(report_data)
+        st.dataframe(report_df, use_container_width=True, hide_index=True)
         st.divider()
         # --- END OF REPORT ---
 
@@ -549,5 +585,4 @@ if st.session_state.get('admin_authenticated'):
                         day_slots = sorted(slots_by_day[day])
                         time_strings = [f"`{s.strftime('%H:%M')}`" for s in day_slots]
                         st.write(" | ".join(time_strings))
-
 
