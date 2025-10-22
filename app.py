@@ -212,7 +212,8 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
         'organization': organization_uri,
         'min_start_time': format_to_iso_z(start_date),
         'max_start_time': format_to_iso_z(end_date),
-        'count': 100 
+        'count': 100,
+        'status': 'active' # <-- NEW: Only fetch active, non-canceled events
     }
     
     while base_url:
@@ -585,4 +586,5 @@ if st.session_state.get('admin_authenticated'):
                         day_slots = sorted(slots_by_day[day])
                         time_strings = [f"`{s.strftime('%H:%M')}`" for s in day_slots]
                         st.write(" | ".join(time_strings))
+
 
