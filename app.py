@@ -139,6 +139,7 @@ DEV_PASSWORD = "WinAsOneDev"
 WORKING_HOURS_START = 9
 WORKING_HOURS_END = 17
 CACHE_INTERVAL_MINUTES = 10 
+DAYS_TO_SHOW_IMMEDIATELY = 3 # New config: How many days to show outside the expander
 
 LANGUAGES = ["English", "German", "French", "Italian", "Spanish"]
 TIMEZONE_OPTIONS = {
@@ -286,8 +287,7 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
 @st.cache_data(ttl=600) # Cache for 10 minutes
 def fetch_language_availability(team_members, api_key, selected_language, rounded_start_time):
     """
-    Fetches availability for a single language using limited concurrency (8 workers)
-    as a balance between desktop speed and mobile stability. 
+    Fetches availability for a single language CONCURRENTLY using full power.
     The rounded_start_time parameter is the key to caching.
     """
     # Use the passed-in rounded time to define the search window
@@ -298,8 +298,8 @@ def fetch_language_availability(team_members, api_key, selected_language, rounde
     language_slots = []
     members_for_lang = [m for m in team_members if selected_language in m["languages"]]
     
-    # --- MODIFIED: Use ThreadPoolExecutor with max_workers=8 ---
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    # --- MODIFIED: Removed max_workers limit ---
+    with ThreadPoolExecutor(max_workers=len(members_for_lang) or 1) as executor:
         args = [(member, api_key) for member in members_for_lang]
         
         def fetch_availability(member, key):
@@ -448,7 +448,10 @@ def get_next_working_days(n, timezone):
 
 # --- UI HELPER FUNCTIONS ---
 def display_main_availability(all_slots, language, timezone, timezone_friendly):
-    """Renders the main availability view for a selected language."""
+    """
+    Renders the main availability view for a selected language.
+    MODIFIED: Shows first N days, hides the rest in an expander.
+    """
     if all_slots is None:
         return 
 
@@ -476,24 +479,41 @@ def display_main_availability(all_slots, language, timezone, timezone_friendly):
         "font-weight: 500;"
     )
 
+    days_rendered = 0
+    remaining_days = []
+
+    # Function to render a single day
+    def render_day(day, day_slots_for_render):
+        st.subheader(day.strftime('%A, %d %B %Y'))
+        unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots_for_render)))
+        time_tags = "".join([f"<div style='{time_slot_style}'>🕒 {time_str}</div>" for time_str in unique_times])
+        st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{time_tags}</div>", unsafe_allow_html=True)
+        st.divider()
+
+    # Render initial days
     for day in working_days:
         if day in slots_by_day:
-            st.subheader(day.strftime('%A, %d %B %Y'))
-            day_slots = slots_by_day[day]
-            unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots)))
-            
-            time_tags = "".join([f"<div style='{time_slot_style}'>🕒 {time_str}</div>" for time_str in unique_times])
-            st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{time_tags}</div>", unsafe_allow_html=True)
-            
-            st.divider()
+            if days_rendered < DAYS_TO_SHOW_IMMEDIATELY:
+                render_day(day, slots_by_day[day])
+                days_rendered += 1
+            else:
+                remaining_days.append(day)
 
+    # Put remaining days in an expander
+    if remaining_days:
+        with st.expander("**Show More Days...**"):
+            for day in remaining_days:
+                 if day in slots_by_day:
+                     render_day(day, slots_by_day[day])
+
+    # Summary remains the same
     st.header("Summary of Daily Availability")
     summary_data = []
     for day in working_days:
          if day in slots_by_day:
-            day_slots = slots_by_day[day]
+            day_slots_summary = slots_by_day[day]
             slots_by_specialist = defaultdict(list)
-            for slot in day_slots:
+            for slot in day_slots_summary:
                 slots_by_specialist[slot['specialist']].append(slot['dateTime'])
             total_true_slots = sum(calculate_true_slots(s_slots) for s_slots in slots_by_specialist.values())
             summary_data.append({"Date": day.strftime('%A, %d %B'), "Bookable Slots": total_true_slots})
