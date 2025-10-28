@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor # For parallel API calls
 TEAM_DATA = [
     {
         "name": "Amina Maachoui",
-        "userUri": "https.api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
+        "userUri": "https://api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
         "soloEventUri": "", # TODO: Add soloEventUri
         "languages": ["English", "French"],
         "team": "EMEA",
@@ -18,96 +18,96 @@ TEAM_DATA = [
     },
     {
         "name": "Angelique Berry",
-        "userUri": "https.api.calendly.com/users/BFGD5IENSLHBGKCA",
-        "soloEventUri": "https.api.calendly.com/event_types/69ab400d-beb3-4ec1-9fec-692834cca779",
+        "userUri": "https://api.calendly.com/users/BFGD5IENSLHBGKCA",
+        "soloEventUri": "https://api.calendly.com/event_types/69ab400d-beb3-4ec1-9fec-692834cca779",
         "languages": ["English"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Dennis Piethe",
-        "userUri": "https.api.calendly.com/users/HHAHQ36MF72PWSDJ",
-        "soloEventUri": "https.api.calendly.com/event_types/75b9658e-71ee-4a74-9458-ca60b4c527fa",
+        "userUri": "https://api.calendly.com/users/HHAHQ36MF72PWSDJ",
+        "soloEventUri": "https://api.calendly.com/event_types/75b9658e-71ee-4a74-9458-ca60b4c527fa",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Harry Britten",
-        "userUri": "https.api.calendly.com/users/0db643a2-44f4-46e1-ac2b-ece863b5045d",
-        "soloEventUri": "https.api.calendly.com/event_types/c2a5c4df-4895-4b0c-ab71-4e3c64ab0e2d",
+        "userUri": "https://api.calendly.com/users/0db643a2-44f4-46e1-ac2b-ece863b5045d",
+        "soloEventUri": "https://api.calendly.com/event_types/c2a5c4df-4895-4b0c-ab71-4e3c64ab0e2d",
         "languages": ["English", "French"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Izabella Ferencz",
-        "userUri": "https.api.calendly.com/users/BCHFHLGAUO5OTUFG",
-        "soloEventUri": "https.api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
+        "userUri": "https://api.calendly.com/users/BCHFHLGAUO5OTUFG",
+        "soloEventUri": "https://api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
         "languages": ["English", "French"],
         "team": "EMEA",
         "active": False
     },
     {
         "name": "Jair Eastbury",
-        "userUri": "https.api.calendly.com/users/DBDGGHZOPYXBMELD",
-        "soloEventUri": "https.api.calendly.com/event_types/c3a8471d-321a-42e7-be7f-0899b84223f5",
+        "userUri": "https://api.calendly.com/users/DBDGGHZOPYXBMELD",
+        "soloEventUri": "https://api.calendly.com/event_types/c3a8471d-321a-42e7-be7f-0899b84223f5",
         "languages": ["English"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Karin Anders",
-        "userUri": "https.api.calendly.com/users/DEGHPMACPCLOCLAA",
-        "soloEventUri": "https.api.calendly.com/event_types/6778bb57-bd8c-4e57-8b2b-5c51de95acbd",
+        "userUri": "https://api.calendly.com/users/DEGHPMACPCLOCLAA",
+        "soloEventUri": "https://api.calendly.com/event_types/6778bb57-bd8c-4e57-8b2b-5c51de95acbd",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Malik Vazirna-Singh",
-        "userUri": "https.api.calendly.com/users/EDGGEI7F6COAYX3E",
-        "soloEventUri": "https.api.calendly.com/event_types/cb749cea-8128-43a4-bb66-46427f6b4d4c",
+        "userUri": "https://api.calendly.com/users/EDGGEI7F6COAYX3E",
+        "soloEventUri": "https://api.calendly.com/event_types/cb749cea-8128-43a4-bb66-46427f6b4d4c",
         "languages": ["English", "French", "Spanish", "Italian"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Natali Lilovska",
-        "userUri": "https.api.calendly.com/users/eb2c8c12-bdc3-49ec-a3c4-f11ef0b72e7e",
-        "soloEventUri": "https.api.calendly.com/event_types/0a8c2cdf-2255-4a0a-b081-d8fb69584b78",
+        "userUri": "https://api.calendly.com/users/eb2c8c12-bdc3-49ec-a3c4-f11ef0b72e7e",
+        "soloEventUri": "https://api.calendly.com/event_types/0a8c2cdf-2255-4a0a-b081-d8fb69584b78",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Nina Leist",
-        "userUri": "https.api.calendly.com/users/EAGAHVEPVZKHOGGB",
-        "soloEventUri": "https.api.calendly.com/event_types/75f3f3a1-a4e0-4659-8fb8-efefadcd48b9",
+        "userUri": "https://api.calendly.com/users/EAGAHVEPVZKHOGGB",
+        "soloEventUri": "https://api.calendly.com/event_types/75f3f3a1-a4e0-4659-8fb8-efefadcd48b9",
         "languages": ["English", "Spanish", "German", "Italian", "French"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Sara Pomparelli",
-        "userUri": "https.api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
-        "soloEventUri": "https.api.calendly.com/event_types/5464d38a-10bc-4ede-ba84-6f924b5e98e6",
+        "userUri": "https://api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
+        "soloEventUri": "https://api.calendly.com/event_types/5464d38a-10bc-4ede-ba84-6f924b5e98e6",
         "languages": ["English", "Italian"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Sarah Jopp",
-        "userUri": "https.api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
-        "soloEventUri": "https.api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
+        "userUri": "https://api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
+        "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
         "languages": ["English"],
         "team": "EMEA",
         "active": False
     },
     {
         "name": "Shamika Alphons",
-        "userUri": "https.api.calendly.com/users/FHDGBJ2IF6MEFNGQ",
-        "soloEventUri": "https.api.calendly.com/event_types/6bfc26c7-dc18-48fa-a757-ba670b012446",
+        "userUri": "https://api.calendly.com/users/FHDGBJ2IF6MEFNGQ",
+        "soloEventUri": "https://api.calendly.com/event_types/6bfc26c7-dc18-48fa-a757-ba670b012446",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
@@ -122,8 +122,8 @@ TEAM_DATA = [
     },
     {
         "name": "Victor Cabrera",
-        "userUri": "https.api.calendly.com/users/GFEFGA4NO2WXJVA5",
-        "soloEventUri": "https.api.calendly.com/event_types/67d128a6-5817-4967-ae85-9fba44012703",
+        "userUri": "https://api.calendly.com/users/GFEFGA4NO2WXJVA5",
+        "soloEventUri": "https://api.calendly.com/event_types/67d128a6-5817-4967-ae85-9fba44012703",
         "languages": ["English", "Spanish"],
         "team": "EMEA",
         "active": True
@@ -282,14 +282,16 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
             
     return counts_by_user_uri
 
-def fetch_language_availability(team_members, api_key, selected_language):
+# --- THIS IS THE KEY FUNCTION FOR PERFORMANCE ---
+@st.cache_data(ttl=600) # Cache for 10 minutes
+def fetch_language_availability(team_members, api_key, selected_language, rounded_start_time):
     """
-    Fetches availability for a single language SEQUENTIALLY for mobile reliability.
-    Uses "smart caching" by rounding the start time.
+    Fetches availability for a single language.
+    The rounded_start_time parameter is the key to caching.
     """
-    now = get_rounded_now() 
-    minimum_booking_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_start_date = now + timedelta(minutes=1) 
+    # Use the passed-in rounded time to define the search window
+    minimum_booking_time = rounded_start_time + timedelta(hours=MINIMUM_NOTICE_HOURS)
+    api_start_date = rounded_start_time + timedelta(minutes=1) 
     api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
 
     language_slots = []
@@ -309,18 +311,18 @@ def fetch_language_availability(team_members, api_key, selected_language):
     language_slots.sort(key=lambda x: x["dateTime"])
     return language_slots
 
-def fetch_all_team_availability(team_members, api_key):
+# --- THIS IS THE KEY FUNCTION FOR PERFORMANCE ---
+@st.cache_data(ttl=600) # Cache for 10 minutes
+def fetch_all_team_availability(team_members, api_key, rounded_start_time):
     """
-    Fetches availability (concurrently) AND all scheduled events (one big call) 
-    for all team members. (Admin function, concurrency is OK here).
-    Uses "smart caching" by rounding the start time.
+    Fetches admin data. The rounded_start_time parameter is the key to caching.
     """
-    now = get_rounded_now()
-    min_availability_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_availability_start = now + timedelta(minutes=1)
+    # Use the passed-in rounded time to define the search window
+    min_availability_time = rounded_start_time + timedelta(hours=MINIMUM_NOTICE_HOURS)
+    api_availability_start = rounded_start_time + timedelta(minutes=1)
     api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
     
-    api_scheduled_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    api_scheduled_start = rounded_start_time.replace(hour=0, minute=0, second=0, microsecond=0)
     api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
     
     availability_by_specialist = defaultdict(list)
@@ -385,8 +387,9 @@ def fetch_organization_discovery_report(organization_uri, api_key):
         
         if not user_uri:
             continue
-
-        events_url = f"https.api.calendly.com/event_types?user={user_uri}&count=50"
+            
+        # Corrected: Added https://
+        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
         
         while events_url:
             try:
@@ -536,7 +539,12 @@ if st.button("Get Availability", type="primary", use_container_width=True):
         st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
     else:
         with st.spinner(f"Fetching latest availability for {selected_language}..."):
-            all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
+            # --- MODIFIED: Pass the rounded time to the fetch function ---
+            rounded_now = get_rounded_now()
+            all_slots = fetch_language_availability(
+                team_members, calendly_api_key, selected_language, rounded_now
+            )
+            # --- END MODIFICATION ---
             st.session_state['availability_data'] = all_slots
             st.session_state['last_params'] = {'lang': selected_language, 'tz_friendly': selected_timezone_friendly}
 else:
@@ -598,10 +606,14 @@ if st.session_state.get('admin_authenticated'):
     if st.session_state['admin_data'] is None:
         with st.spinner("Fetching all team availability for admin view..."):
             active_team_members = get_filtered_team_members()
+            # --- MODIFIED: Pass the rounded time to the fetch function ---
+            rounded_now = get_rounded_now()
             admin_availability, raw_slots, booked_counts = fetch_all_team_availability(
                 active_team_members, 
-                calendly_api_key
+                calendly_api_key,
+                rounded_now
             )
+            # --- END MODIFICATION ---
             st.session_state['admin_data'] = (admin_availability, raw_slots, booked_counts)
     
     if st.session_state['admin_data'] is None:
