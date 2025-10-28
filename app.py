@@ -284,7 +284,6 @@ def fetch_language_availability(team_members, api_key, selected_language):
     language_slots = []
     members_for_lang = [m for m in team_members if selected_language in m["languages"]]
     
-    # --- MODIFIED: Removed ThreadPoolExecutor, using a simple loop for reliability ---
     for member in members_for_lang:
         user_slots = get_user_availability(
             member["soloEventUri"], 
@@ -295,7 +294,6 @@ def fetch_language_availability(team_members, api_key, selected_language):
         for slot_time in user_slots:
             if slot_time >= minimum_booking_time:
                 language_slots.append({"specialist": member["name"], "dateTime": slot_time})
-    # --- END MODIFICATION ---
 
     language_slots.sort(key=lambda x: x["dateTime"])
     return language_slots
@@ -318,7 +316,6 @@ def fetch_all_team_availability(team_members, api_key):
     raw_slots_for_summary = []
     booked_event_counts = {} 
 
-    # Concurrency is fine for the admin view, which is less used and desktop-focused.
     with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
         args = [(m, api_key) for m in team_members]
         def fetch_availability(member, key):
@@ -489,21 +486,21 @@ def display_main_availability(all_slots, language, timezone, timezone_friendly):
 st.set_page_config(layout="wide")
 st.title("EMEA Onboarding Team Availability")
 
-if 'last_params' not in st.session_state:
-    st.session_state['last_params'] = {}
+# --- Initialize session state ---
 if 'availability_data' not in st.session_state:
     st.session_state['availability_data'] = None
+if 'last_params' not in st.session_state:
+    st.session_state['last_params'] = {}
 if 'admin_authenticated' not in st.session_state: 
     st.session_state['admin_authenticated'] = False
-if 'dev_authenticated' not in st.session_state: # <-- NEW: Session state for dev
+if 'dev_authenticated' not in st.session_state:
     st.session_state['dev_authenticated'] = False
 if 'admin_data' not in st.session_state: 
     st.session_state['admin_data'] = None
 if 'org_report_data' not in st.session_state:
     st.session_state['org_report_data'] = None
 
-
-# --- Sidebar ---
+# --- Sidebar Options ---
 st.sidebar.header("Options")
 selected_language = st.sidebar.selectbox("Select language", options=LANGUAGES)
 selected_timezone_friendly = st.sidebar.selectbox("Select your timezone", options=TIMEZONE_OPTIONS.keys(), index=list(TIMEZONE_OPTIONS.keys()).index(DEFAULT_TIMEZONE_FRIENDLY))
@@ -512,22 +509,40 @@ selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
 team_members = get_filtered_team_members()
 calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
 
-current_params = {'lang': selected_language, 'tz': selected_timezone_friendly}
-if current_params != st.session_state.get('last_params'):
-    st.session_state['availability_data'] = None 
-    st.session_state['admin_data'] = None 
-    st.session_state['org_report_data'] = None # Clear all data on param change
-
-if st.session_state['availability_data'] is None:
+# --- Get Availability Button ---
+if st.sidebar.button("Get Availability", type="primary"):
+    st.session_state['availability_data'] = None # Force a refresh
+    st.session_state['admin_data'] = None # Clear admin data
+    st.session_state['org_report_data'] = None # Clear dev data
+    
     if not team_members:
         st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
     else:
         with st.spinner(f"Fetching latest availability for {selected_language}..."):
             all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
             st.session_state['availability_data'] = all_slots
-            st.session_state['last_params'] = current_params
+            # Store the params that were used for this fetch
+            st.session_state['last_params'] = {'lang': selected_language, 'tz_friendly': selected_timezone_friendly}
+else:
+    # On first load, or if no button pressed, show instruction
+    if st.session_state['availability_data'] is None:
+        st.info("Select your language and timezone, then click **Get Availability** in the sidebar.")
 
-display_main_availability(st.session_state['availability_data'], selected_language, selected_timezone, selected_timezone_friendly)
+# --- Main Page Display ---
+# Only display data if it exists in the session state
+if st.session_state['availability_data'] is not None:
+    # Get the language and timezone that were used when the button was *clicked*
+    last_params = st.session_state.get('last_params', {})
+    lang_to_display = last_params.get('lang', selected_language)
+    tz_friendly_to_display = last_params.get('tz_friendly', selected_timezone_friendly)
+    tz_to_display = pytz.timezone(TIMEZONE_OPTIONS.get(tz_friendly_to_display, "Europe/London"))
+    
+    display_main_availability(
+        st.session_state['availability_data'], 
+        lang_to_display, 
+        tz_to_display, 
+        tz_friendly_to_display
+    )
 
 # --- Admin Section ---
 st.sidebar.divider()
