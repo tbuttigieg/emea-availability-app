@@ -18,7 +18,7 @@ TEAM_DATA = [
     },
     {
         "name": "Angelique Berry",
-        "userUri": "https.api.calendly.com/users/BFGD5IENSLHBGKCA",
+        "userUri": "https://api.calendly.com/users/BFGD5IENSLHBGKCA",
         "soloEventUri": "https://api.calendly.com/event_types/69ab400d-beb3-4ec1-9fec-692834cca779",
         "languages": ["English"],
         "team": "EMEA",
@@ -34,7 +34,7 @@ TEAM_DATA = [
     },
     {
         "name": "Harry Britten",
-        "userUri": "https.api.calendly.com/users/0db643a2-44f4-46e1-ac2b-ece863b5045d",
+        "userUri": "https://api.calendly.com/users/0db643a2-44f4-46e1-ac2b-ece863b5045d",
         "soloEventUri": "https://api.calendly.com/event_types/c2a5c4df-4895-4b0c-ab71-4e3c64ab0e2d",
         "languages": ["English", "French"],
         "team": "EMEA",
@@ -42,7 +42,7 @@ TEAM_DATA = [
     },
     {
         "name": "Izabella Ferencz",
-        "userUri": "https.api.calendly.com/users/BCHFHLGAUO5OTUFG",
+        "userUri": "https://api.calendly.com/users/BCHFHLGAUO5OTUFG",
         "soloEventUri": "https://api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
         "languages": ["English", "French"],
         "team": "EMEA",
@@ -50,7 +50,7 @@ TEAM_DATA = [
     },
     {
         "name": "Jair Eastbury",
-        "userUri": "https.api.calendly.com/users/DBDGGHZOPYXBMELD",
+        "userUri": "https://api.calendly.com/users/DBDGGHZOPYXBMELD",
         "soloEventUri": "https://api.calendly.com/event_types/c3a8471d-321a-42e7-be7f-0899b84223f5",
         "languages": ["English"],
         "team": "EMEA",
@@ -58,7 +58,7 @@ TEAM_DATA = [
     },
     {
         "name": "Karin Anders",
-        "userUri": "https.api.calendly.com/users/DEGHPMACPCLOCLAA",
+        "userUri": "https://api.calendly.com/users/DEGHPMACPCLOCLAA",
         "soloEventUri": "https://api.calendly.com/event_types/6778bb57-bd8c-4e57-8b2b-5c51de95acbd",
         "languages": ["English", "German"],
         "team": "EMEA",
@@ -66,7 +66,7 @@ TEAM_DATA = [
     },
     {
         "name": "Malik Vazirna-Singh",
-        "userUri": "https.api.calendly.com/users/EDGGEI7F6COAYX3E",
+        "userUri": "https://api.calendly.com/users/EDGGEI7F6COAYX3E",
         "soloEventUri": "https://api.calendly.com/event_types/cb749cea-8128-43a4-bb66-46427f6b4d4c",
         "languages": ["English", "French", "Spanish", "Italian"],
         "team": "EMEA",
@@ -74,7 +74,7 @@ TEAM_DATA = [
     },
     {
         "name": "Natali Lilovska",
-        "userUri": "https.api.calendly.com/users/eb2c8c12-bdc3-49ec-a3c4-f11ef0b72e7e",
+        "userUri": "https://api.calendly.com/users/eb2c8c12-bdc3-49ec-a3c4-f11ef0b72e7e",
         "soloEventUri": "https://api.calendly.com/event_types/0a8c2cdf-2255-4a0a-b081-d8fb69584b78",
         "languages": ["English", "German"],
         "team": "EMEA",
@@ -82,7 +82,7 @@ TEAM_DATA = [
     },
     {
         "name": "Nina Leist",
-        "userUri": "https.api.calendly.com/users/EAGAHVEPVZKHOGGB",
+        "userUri": "https://api.calendly.com/users/EAGAHVEPVZKHOGGB",
         "soloEventUri": "https://api.calendly.com/event_types/75f3f3a1-a4e0-4659-8fb8-efefadcd48b9",
         "languages": ["English", "Spanish", "German", "Italian", "French"],
         "team": "EMEA",
@@ -90,7 +90,7 @@ TEAM_DATA = [
     },
     {
         "name": "Sara Pomparelli",
-        "userUri": "https.api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
+        "userUri": "https://api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
         "soloEventUri": "https://api.calendly.com/event_types/5464d38a-10bc-4ede-ba84-6f924b5e98e6",
         "languages": ["English", "Italian"],
         "team": "EMEA",
@@ -106,7 +106,7 @@ TEAM_DATA = [
     },
     {
         "name": "Shamika Alphons",
-        "userUri": "https.api.calendly.com/users/FHDGBJ2IF6MEFNGQ",
+        "userUri": "https://api.calendly.com/users/FHDGBJ2IF6MEFNGQ",
         "soloEventUri": "https://api.calendly.com/event_types/6bfc26c7-dc18-48fa-a757-ba670b012446",
         "languages": ["English", "German"],
         "team": "EMEA",
@@ -122,7 +122,7 @@ TEAM_DATA = [
     },
     {
         "name": "Victor Cabrera",
-        "userUri": "https.api.calendly.com/users/GFEFGA4NO2WXJVA5",
+        "userUri": "https://api.calendly.com/users/GFEFGA4NO2WXJVA5",
         "soloEventUri": "https://api.calendly.com/event_types/67d128a6-5817-4967-ae85-9fba44012703",
         "languages": ["English", "Spanish"],
         "team": "EMEA",
@@ -174,7 +174,7 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     all_slots = []
-    base_url = "https.api.calendly.com/event_type_available_times"
+    base_url = "https://api.calendly.com/event_type_available_times" # <-- FIXED
     
     loop_start_date = start_date
     while loop_start_date < end_date:
@@ -203,7 +203,7 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
 def get_organization_uri(api_key):
     """Fetches the organization URI associated with the API key."""
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    url = "https.api.calendly.com/users/me"
+    url = "https://api.calendly.com/users/me" # <-- FIXED
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -226,7 +226,7 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
         return counts_by_user_uri
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    base_url = "https.api.calendly.com/scheduled_events"
+    base_url = "https://api.calendly.com/scheduled_events" # <-- FIXED
     
     params = {
         'organization': organization_uri,
@@ -348,7 +348,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
     all_user_event_data = []
 
     # 1. Get all users in the organization
-    users_url = f"https.api.calendly.com/organization_memberships?organization={organization_uri}&count=100"
+    users_url = f"https://api.calendly.com/organization_memberships?organization={organization_uri}&count=100" # <-- FIXED
     all_users = []
     
     while users_url:
@@ -372,7 +372,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
         if not user_uri:
             continue
 
-        events_url = f"https.api.calendly.com/event_types?user={user_uri}&count=50"
+        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50" # <-- FIXED
         
         while events_url:
             try:
