@@ -10,9 +10,9 @@ from concurrent.futures import ThreadPoolExecutor # For parallel API calls
 TEAM_DATA = [
     {
         "name": "Amina Maachoui",
-        "userUri": "", # TODO: Add userUri
+        "userUri": "https://api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
         "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": ["English", "French"], # TODO: Confirm languages
+        "languages": ["English", "French"], # <-- UPDATED
         "team": "EMEA",
         "active": False
     },
@@ -98,11 +98,11 @@ TEAM_DATA = [
     },
     {
         "name": "Sarah Jopp",
-        "userUri": "", # TODO: Add userUri
-        "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": [], # TODO: Add languages
+        "userUri": "https://api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
+        "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
+        "languages": ["English"], # <-- UPDATED
         "team": "EMEA",
-        "active": False
+        "active": True
     },
     {
         "name": "Shamika Alphons",
@@ -116,7 +116,7 @@ TEAM_DATA = [
         "name": "Tom Webb",
         "userUri": "", # TODO: Add userUri
         "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": [], # TODO: Add languages
+        "languages": ["English", "German"], # <-- UPDATED
         "team": "EMEA",
         "active": False
     },
@@ -135,7 +135,7 @@ WORKING_DAYS_TO_CHECK = 10
 MINIMUM_NOTICE_HOURS = 21
 SLOT_DURATION_MINUTES = 120
 ADMIN_PASSWORD = "WinAsOne" 
-DEV_PASSWORD = "WinAsOneDev" # <-- NEW: Password for developer tools
+DEV_PASSWORD = "WinAsOneDev" 
 WORKING_HOURS_START = 9
 WORKING_HOURS_END = 17
 
@@ -174,7 +174,7 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     all_slots = []
-    base_url = "https://api.calendly.com/event_type_available_times" # <-- FIXED
+    base_url = "https://api.calendly.com/event_type_available_times"
     
     loop_start_date = start_date
     while loop_start_date < end_date:
@@ -203,7 +203,7 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
 def get_organization_uri(api_key):
     """Fetches the organization URI associated with the API key."""
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    url = "https://api.calendly.com/users/me" # <-- FIXED
+    url = "https://api.calendly.com/users/me"
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -226,7 +226,7 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
         return counts_by_user_uri
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    base_url = "https://api.calendly.com/scheduled_events" # <-- FIXED
+    base_url = "https://api.calendly.com/scheduled_events"
     
     params = {
         'organization': organization_uri,
@@ -348,7 +348,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
     all_user_event_data = []
 
     # 1. Get all users in the organization
-    users_url = f"https://api.calendly.com/organization_memberships?organization={organization_uri}&count=100" # <-- FIXED
+    users_url = f"https://api.calendly.com/organization_memberships?organization={organization_uri}&count=100"
     all_users = []
     
     while users_url:
@@ -372,7 +372,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
         if not user_uri:
             continue
 
-        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50" # <-- FIXED
+        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
         
         while events_url:
             try:
