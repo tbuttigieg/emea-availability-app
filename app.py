@@ -12,7 +12,7 @@ TEAM_DATA = [
         "name": "Amina Maachoui",
         "userUri": "https://api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
         "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": ["English", "French"], # <-- UPDATED
+        "languages": ["English", "French"],
         "team": "EMEA",
         "active": False
     },
@@ -100,9 +100,9 @@ TEAM_DATA = [
         "name": "Sarah Jopp",
         "userUri": "https://api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
         "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
-        "languages": ["English"], # <-- UPDATED
+        "languages": ["English"],
         "team": "EMEA",
-        "active": True
+        "active": False
     },
     {
         "name": "Shamika Alphons",
@@ -116,7 +116,7 @@ TEAM_DATA = [
         "name": "Tom Webb",
         "userUri": "", # TODO: Add userUri
         "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": ["English", "German"], # <-- UPDATED
+        "languages": ["English", "German"],
         "team": "EMEA",
         "active": False
     },
@@ -273,7 +273,9 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
     return counts_by_user_uri
 
 def fetch_language_availability(team_members, api_key, selected_language):
-    """Fetches availability for a single language using concurrent API calls for speed."""
+    """
+    Fetches availability for a single language SEQUENTIALLY for mobile reliability.
+    """
     utc, now = pytz.UTC, datetime.now(pytz.UTC)
     minimum_booking_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
     api_start_date = now + timedelta(minutes=1)
@@ -282,20 +284,26 @@ def fetch_language_availability(team_members, api_key, selected_language):
     language_slots = []
     members_for_lang = [m for m in team_members if selected_language in m["languages"]]
     
-    with ThreadPoolExecutor(max_workers=len(members_for_lang) or 1) as executor:
-        args = [(m["soloEventUri"], api_start_date, api_end_date, api_key) for m in members_for_lang]
-        results = executor.map(lambda p: get_user_availability(*p), args)
-        for member, user_slots in zip(members_for_lang, results):
-            for slot_time in user_slots:
-                if slot_time >= minimum_booking_time:
-                    language_slots.append({"specialist": member["name"], "dateTime": slot_time})
+    # --- MODIFIED: Removed ThreadPoolExecutor, using a simple loop for reliability ---
+    for member in members_for_lang:
+        user_slots = get_user_availability(
+            member["soloEventUri"], 
+            api_start_date, 
+            api_end_date, 
+            api_key
+        )
+        for slot_time in user_slots:
+            if slot_time >= minimum_booking_time:
+                language_slots.append({"specialist": member["name"], "dateTime": slot_time})
+    # --- END MODIFICATION ---
+
     language_slots.sort(key=lambda x: x["dateTime"])
     return language_slots
 
 def fetch_all_team_availability(team_members, api_key):
     """
     Fetches availability (concurrently) AND all scheduled events (one big call) 
-    for all team members.
+    for all team members. (Admin function, concurrency is OK here).
     """
     utc, now = pytz.UTC, datetime.now(pytz.UTC)
     
@@ -310,6 +318,7 @@ def fetch_all_team_availability(team_members, api_key):
     raw_slots_for_summary = []
     booked_event_counts = {} 
 
+    # Concurrency is fine for the admin view, which is less used and desktop-focused.
     with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
         args = [(m, api_key) for m in team_members]
         def fetch_availability(member, key):
