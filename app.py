@@ -236,7 +236,7 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
         return counts_by_user_uri
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    base_url = "https://api.calendly.com/scheduled_events"
+    base_url = "https.api.calendly.com/scheduled_events"
     
     params = {
         'organization': organization_uri,
@@ -388,8 +388,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
         if not user_uri:
             continue
             
-        # Corrected: Added https://
-        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
+        events_url = f"https.api.calendly.com/event_types?user={user_uri}&count=50"
         
         while events_url:
             try:
@@ -539,12 +538,10 @@ if st.button("Get Availability", type="primary", use_container_width=True):
         st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
     else:
         with st.spinner(f"Fetching latest availability for {selected_language}..."):
-            # --- MODIFIED: Pass the rounded time to the fetch function ---
             rounded_now = get_rounded_now()
             all_slots = fetch_language_availability(
                 team_members, calendly_api_key, selected_language, rounded_now
             )
-            # --- END MODIFICATION ---
             st.session_state['availability_data'] = all_slots
             st.session_state['last_params'] = {'lang': selected_language, 'tz_friendly': selected_timezone_friendly}
 else:
@@ -603,21 +600,22 @@ if st.session_state.get('admin_authenticated'):
     st.divider()
     st.header("🔒 Admin View")
 
-    if st.session_state['admin_data'] is None:
+    # --- MODIFIED: Added a button to "lazy load" the admin data ---
+    if st.button("Load Admin Reports", key="load_admin_data"):
+        st.session_state['admin_data'] = None # Force a refresh
         with st.spinner("Fetching all team availability for admin view..."):
             active_team_members = get_filtered_team_members()
-            # --- MODIFIED: Pass the rounded time to the fetch function ---
             rounded_now = get_rounded_now()
             admin_availability, raw_slots, booked_counts = fetch_all_team_availability(
                 active_team_members, 
                 calendly_api_key,
                 rounded_now
             )
-            # --- END MODIFICATION ---
             st.session_state['admin_data'] = (admin_availability, raw_slots, booked_counts)
     
+    # This data display logic only runs if admin_data exists in session state
     if st.session_state['admin_data'] is None:
-        st.error("Failed to load admin data. Check API key and permissions.")
+        st.info("Click 'Load Admin Reports' to fetch and display the admin dashboard.")
     else:
         admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
     
@@ -766,6 +764,7 @@ if st.session_state.get('dev_authenticated'):
     st.write("A tool to find all users and their 'solo' event types in your Calendly organization. Use this to find the URIs needed to build new team apps.")
     st.warning("This tool scans your *entire* organization and may be slow.")
     
+    # --- MODIFIED: The button now only triggers the fetch ---
     if st.button("Run Organization Discovery Report"):
         st.session_state['org_report_data'] = None # Clear old data
         organization_uri = get_organization_uri(calendly_api_key)
@@ -780,7 +779,10 @@ if st.session_state.get('dev_authenticated'):
         else:
             st.error("Could not retrieve organization URI. Check API Key permissions.")
 
-    if st.session_state['org_report_data'] is not None:
+    # --- MODIFIED: Display logic is separate and checks session state ---
+    if st.session_state['org_report_data'] is None:
+        st.info("Click 'Run Organization Discovery Report' to fetch data.")
+    else:
         df = st.session_state['org_report_data']
         st.dataframe(df, use_container_width=True)
         st.download_button(
