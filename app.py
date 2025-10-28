@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor # For parallel API calls
 TEAM_DATA = [
     {
         "name": "Amina Maachoui",
-        "userUri": "https://api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
+        "userUri": "https.api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
         "soloEventUri": "", # TODO: Add soloEventUri
         "languages": ["English", "French"],
         "team": "EMEA",
@@ -18,96 +18,96 @@ TEAM_DATA = [
     },
     {
         "name": "Angelique Berry",
-        "userUri": "https://api.calendly.com/users/BFGD5IENSLHBGKCA",
-        "soloEventUri": "https://api.calendly.com/event_types/69ab400d-beb3-4ec1-9fec-692834cca779",
+        "userUri": "https.api.calendly.com/users/BFGD5IENSLHBGKCA",
+        "soloEventUri": "https.api.calendly.com/event_types/69ab400d-beb3-4ec1-9fec-692834cca779",
         "languages": ["English"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Dennis Piethe",
-        "userUri": "https://api.calendly.com/users/HHAHQ36MF72PWSDJ",
-        "soloEventUri": "https://api.calendly.com/event_types/75b9658e-71ee-4a74-9458-ca60b4c527fa",
+        "userUri": "https.api.calendly.com/users/HHAHQ36MF72PWSDJ",
+        "soloEventUri": "https.api.calendly.com/event_types/75b9658e-71ee-4a74-9458-ca60b4c527fa",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Harry Britten",
-        "userUri": "https://api.calendly.com/users/0db643a2-44f4-46e1-ac2b-ece863b5045d",
-        "soloEventUri": "https://api.calendly.com/event_types/c2a5c4df-4895-4b0c-ab71-4e3c64ab0e2d",
+        "userUri": "https.api.calendly.com/users/0db643a2-44f4-46e1-ac2b-ece863b5045d",
+        "soloEventUri": "https.api.calendly.com/event_types/c2a5c4df-4895-4b0c-ab71-4e3c64ab0e2d",
         "languages": ["English", "French"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Izabella Ferencz",
-        "userUri": "https://api.calendly.com/users/BCHFHLGAUO5OTUFG",
-        "soloEventUri": "https://api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
+        "userUri": "https.api.calendly.com/users/BCHFHLGAUO5OTUFG",
+        "soloEventUri": "https.api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
         "languages": ["English", "French"],
         "team": "EMEA",
         "active": False
     },
     {
         "name": "Jair Eastbury",
-        "userUri": "https://api.calendly.com/users/DBDGGHZOPYXBMELD",
-        "soloEventUri": "https://api.calendly.com/event_types/c3a8471d-321a-42e7-be7f-0899b84223f5",
+        "userUri": "https.api.calendly.com/users/DBDGGHZOPYXBMELD",
+        "soloEventUri": "https.api.calendly.com/event_types/c3a8471d-321a-42e7-be7f-0899b84223f5",
         "languages": ["English"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Karin Anders",
-        "userUri": "https://api.calendly.com/users/DEGHPMACPCLOCLAA",
-        "soloEventUri": "https://api.calendly.com/event_types/6778bb57-bd8c-4e57-8b2b-5c51de95acbd",
+        "userUri": "https.api.calendly.com/users/DEGHPMACPCLOCLAA",
+        "soloEventUri": "https.api.calendly.com/event_types/6778bb57-bd8c-4e57-8b2b-5c51de95acbd",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Malik Vazirna-Singh",
-        "userUri": "https://api.calendly.com/users/EDGGEI7F6COAYX3E",
-        "soloEventUri": "https://api.calendly.com/event_types/cb749cea-8128-43a4-bb66-46427f6b4d4c",
+        "userUri": "https.api.calendly.com/users/EDGGEI7F6COAYX3E",
+        "soloEventUri": "https.api.calendly.com/event_types/cb749cea-8128-43a4-bb66-46427f6b4d4c",
         "languages": ["English", "French", "Spanish", "Italian"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Natali Lilovska",
-        "userUri": "https://api.calendly.com/users/eb2c8c12-bdc3-49ec-a3c4-f11ef0b72e7e",
-        "soloEventUri": "https://api.calendly.com/event_types/0a8c2cdf-2255-4a0a-b081-d8fb69584b78",
+        "userUri": "https.api.calendly.com/users/eb2c8c12-bdc3-49ec-a3c4-f11ef0b72e7e",
+        "soloEventUri": "https.api.calendly.com/event_types/0a8c2cdf-2255-4a0a-b081-d8fb69584b78",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Nina Leist",
-        "userUri": "https://api.calendly.com/users/EAGAHVEPVZKHOGGB",
-        "soloEventUri": "https://api.calendly.com/event_types/75f3f3a1-a4e0-4659-8fb8-efefadcd48b9",
+        "userUri": "https.api.calendly.com/users/EAGAHVEPVZKHOGGB",
+        "soloEventUri": "https.api.calendly.com/event_types/75f3f3a1-a4e0-4659-8fb8-efefadcd48b9",
         "languages": ["English", "Spanish", "German", "Italian", "French"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Sara Pomparelli",
-        "userUri": "https://api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
-        "soloEventUri": "https://api.calendly.com/event_types/5464d38a-10bc-4ede-ba84-6f924b5e98e6",
+        "userUri": "https.api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
+        "soloEventUri": "https.api.calendly.com/event_types/5464d38a-10bc-4ede-ba84-6f924b5e98e6",
         "languages": ["English", "Italian"],
         "team": "EMEA",
         "active": True
     },
     {
         "name": "Sarah Jopp",
-        "userUri": "https://api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
-        "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
+        "userUri": "https.api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
+        "soloEventUri": "https.api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
         "languages": ["English"],
         "team": "EMEA",
         "active": False
     },
     {
         "name": "Shamika Alphons",
-        "userUri": "https://api.calendly.com/users/FHDGBJ2IF6MEFNGQ",
-        "soloEventUri": "https://api.calendly.com/event_types/6bfc26c7-dc18-48fa-a757-ba670b012446",
+        "userUri": "https.api.calendly.com/users/FHDGBJ2IF6MEFNGQ",
+        "soloEventUri": "https.api.calendly.com/event_types/6bfc26c7-dc18-48fa-a757-ba670b012446",
         "languages": ["English", "German"],
         "team": "EMEA",
         "active": True
@@ -122,8 +122,8 @@ TEAM_DATA = [
     },
     {
         "name": "Victor Cabrera",
-        "userUri": "https://api.calendly.com/users/GFEFGA4NO2WXJVA5",
-        "soloEventUri": "https://api.calendly.com/event_types/67d128a6-5817-4967-ae85-9fba44012703",
+        "userUri": "https.api.calendly.com/users/GFEFGA4NO2WXJVA5",
+        "soloEventUri": "https.api.calendly.com/event_types/67d128a6-5817-4967-ae85-9fba44012703",
         "languages": ["English", "Spanish"],
         "team": "EMEA",
         "active": True
@@ -138,6 +138,7 @@ ADMIN_PASSWORD = "WinAsOne"
 DEV_PASSWORD = "WinAsOneDev" 
 WORKING_HOURS_START = 9
 WORKING_HOURS_END = 17
+CACHE_INTERVAL_MINUTES = 10 
 
 LANGUAGES = ["English", "German", "French", "Italian", "Spanish"]
 TIMEZONE_OPTIONS = {
@@ -158,6 +159,15 @@ def convert_df_to_csv(df):
     """Converts a DataFrame to a CSV string for downloading."""
     return df.to_csv(index=True).encode('utf-8')
 
+def get_rounded_now(interval_minutes=CACHE_INTERVAL_MINUTES):
+    """
+    Rounds the current UTC time down to the nearest X-minute interval.
+    This creates a stable time window for caching API calls.
+    """
+    now = datetime.now(pytz.UTC)
+    minutes = (now.minute // interval_minutes) * interval_minutes
+    return now.replace(minute=minutes, second=0, microsecond=0)
+
 # --- CORE FUNCTIONS ---
 
 def get_filtered_team_members():
@@ -167,7 +177,7 @@ def get_filtered_team_members():
         if m["active"] and m["team"] == TEAM_TO_REPORT and m["userUri"] and m["soloEventUri"]
     ]
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=600) # Cache for 10 minutes (600 seconds)
 def get_user_availability(solo_event_uri, start_date, end_date, api_key):
     """Fetches available slots from the Calendly API for a single user."""
     if not api_key: return []
@@ -215,7 +225,7 @@ def get_organization_uri(api_key):
              st.error(f"Calendly API Error (User): {e.response.json().get('message', 'Unknown Error')}", icon="🚨")
         return None
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=600) # Cache for 10 minutes
 def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
     """
     Fetches all booked appointments for an entire organization and
@@ -275,10 +285,11 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
 def fetch_language_availability(team_members, api_key, selected_language):
     """
     Fetches availability for a single language SEQUENTIALLY for mobile reliability.
+    Uses "smart caching" by rounding the start time.
     """
-    utc, now = pytz.UTC, datetime.now(pytz.UTC)
+    now = get_rounded_now() 
     minimum_booking_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_start_date = now + timedelta(minutes=1)
+    api_start_date = now + timedelta(minutes=1) 
     api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
 
     language_slots = []
@@ -302,9 +313,9 @@ def fetch_all_team_availability(team_members, api_key):
     """
     Fetches availability (concurrently) AND all scheduled events (one big call) 
     for all team members. (Admin function, concurrency is OK here).
+    Uses "smart caching" by rounding the start time.
     """
-    utc, now = pytz.UTC, datetime.now(pytz.UTC)
-    
+    now = get_rounded_now()
     min_availability_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
     api_availability_start = now + timedelta(minutes=1)
     api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
@@ -343,7 +354,6 @@ def fetch_all_team_availability(team_members, api_key):
 
     return availability_by_specialist, raw_slots_for_summary, booked_event_counts
 
-# --- NEW: Function for Organization Discovery ---
 @st.cache_data(ttl=3600) # Cache for 1 hour
 def fetch_organization_discovery_report(organization_uri, api_key):
     """Fetches all users and their event types for an entire organization."""
@@ -353,7 +363,6 @@ def fetch_organization_discovery_report(organization_uri, api_key):
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     all_user_event_data = []
 
-    # 1. Get all users in the organization
     users_url = f"https://api.calendly.com/organization_memberships?organization={organization_uri}&count=100"
     all_users = []
     
@@ -368,7 +377,6 @@ def fetch_organization_discovery_report(organization_uri, api_key):
             st.error(f"Failed to fetch organization users: {e.response.json().get('message')}", icon="🚨")
             users_url = None
     
-    # 2. For each user, get their event types
     for user_membership in all_users:
         user = user_membership.get("user", {})
         user_name = user.get("name")
@@ -378,7 +386,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
         if not user_uri:
             continue
 
-        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
+        events_url = f"https.api.calendly.com/event_types?user={user_uri}&count=50"
         
         while events_url:
             try:
@@ -387,7 +395,6 @@ def fetch_organization_discovery_report(organization_uri, api_key):
                 data = response.json()
                 
                 for event in data.get("collection", []):
-                    # Only include solo events
                     if event.get("kind") == "solo":
                         all_user_event_data.append({
                             "User Name": user_name,
@@ -400,7 +407,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
                 
                 events_url = data.get("pagination", {}).get("next_page")
             except requests.exceptions.HTTPError:
-                events_url = None # Silently fail for one user's events
+                events_url = None 
 
     return all_user_event_data
 
@@ -500,17 +507,27 @@ if 'admin_data' not in st.session_state:
 if 'org_report_data' not in st.session_state:
     st.session_state['org_report_data'] = None
 
-# --- Sidebar Options ---
-st.sidebar.header("Options")
-selected_language = st.sidebar.selectbox("Select language", options=LANGUAGES)
-selected_timezone_friendly = st.sidebar.selectbox("Select your timezone", options=TIMEZONE_OPTIONS.keys(), index=list(TIMEZONE_OPTIONS.keys()).index(DEFAULT_TIMEZONE_FRIENDLY))
-selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
-
 team_members = get_filtered_team_members()
 calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
 
+# --- MAIN PAGE CONTROLS (MOVED FROM SIDEBAR) ---
+st.write("Select your language and timezone to find open slots.")
+
+col1, col2 = st.columns([1, 1])
+with col1:
+    selected_language = st.selectbox("Select language", options=LANGUAGES, key="main_lang")
+with col2:
+    selected_timezone_friendly = st.selectbox(
+        "Select your timezone", 
+        options=TIMEZONE_OPTIONS.keys(), 
+        index=list(TIMEZONE_OPTIONS.keys()).index(DEFAULT_TIMEZONE_FRIENDLY),
+        key="main_tz"
+    )
+
+selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
+
 # --- Get Availability Button ---
-if st.sidebar.button("Get Availability", type="primary"):
+if st.button("Get Availability", type="primary", use_container_width=True):
     st.session_state['availability_data'] = None # Force a refresh
     st.session_state['admin_data'] = None # Clear admin data
     st.session_state['org_report_data'] = None # Clear dev data
@@ -521,17 +538,16 @@ if st.sidebar.button("Get Availability", type="primary"):
         with st.spinner(f"Fetching latest availability for {selected_language}..."):
             all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
             st.session_state['availability_data'] = all_slots
-            # Store the params that were used for this fetch
             st.session_state['last_params'] = {'lang': selected_language, 'tz_friendly': selected_timezone_friendly}
 else:
     # On first load, or if no button pressed, show instruction
     if st.session_state['availability_data'] is None:
-        st.info("Select your language and timezone, then click **Get Availability** in the sidebar.")
+        st.info("Click 'Get Availability' to see the latest slots.")
+
+st.divider()
 
 # --- Main Page Display ---
-# Only display data if it exists in the session state
 if st.session_state['availability_data'] is not None:
-    # Get the language and timezone that were used when the button was *clicked*
     last_params = st.session_state.get('last_params', {})
     lang_to_display = last_params.get('lang', selected_language)
     tz_friendly_to_display = last_params.get('tz_friendly', selected_timezone_friendly)
@@ -544,22 +560,20 @@ if st.session_state['availability_data'] is not None:
         tz_friendly_to_display
     )
 
-# --- Admin Section ---
-st.sidebar.divider()
+# --- SIDEBAR: Admin & Dev Sections ---
 st.sidebar.header("Admin Access")
 password = st.sidebar.text_input("Enter password", type="password", key="admin_pass")
 
 if st.sidebar.button("Unlock Admin View"):
     if password == ADMIN_PASSWORD:
         st.session_state['admin_authenticated'] = True
-        st.session_state['dev_authenticated'] = False # Log out of dev
+        st.session_state['dev_authenticated'] = False 
         st.session_state['admin_data'] = None 
         st.session_state['org_report_data'] = None 
     else:
         st.sidebar.error("Incorrect password.", key="admin_err")
         st.session_state['admin_authenticated'] = False
 
-# --- Developer Section ---
 st.sidebar.divider()
 st.sidebar.header("Developer Access")
 dev_password = st.sidebar.text_input("Enter developer password", type="password", key="dev_pass")
@@ -567,7 +581,7 @@ dev_password = st.sidebar.text_input("Enter developer password", type="password"
 if st.sidebar.button("Unlock Developer Tools"):
     if dev_password == DEV_PASSWORD:
         st.session_state['dev_authenticated'] = True
-        st.session_state['admin_authenticated'] = False # Log out of admin
+        st.session_state['admin_authenticated'] = False 
         st.session_state['admin_data'] = None
         st.session_state['org_report_data'] = None
     else:
@@ -595,7 +609,7 @@ if st.session_state.get('admin_authenticated'):
     else:
         admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
     
-        if not admin_availability and not booked_counts:
+        if not admin_availability and not booked_counts and not raw_slots:
             st.warning("No availability or booked events found for any team member.")
         else:
             active_team_members = get_filtered_team_members()
