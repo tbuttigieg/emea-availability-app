@@ -236,7 +236,7 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
         return counts_by_user_uri
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    base_url = "https.api.calendly.com/scheduled_events"
+    base_url = "https://api.calendly.com/scheduled_events"
     
     params = {
         'organization': organization_uri,
@@ -286,7 +286,7 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
 @st.cache_data(ttl=600) # Cache for 10 minutes
 def fetch_language_availability(team_members, api_key, selected_language, rounded_start_time):
     """
-    Fetches availability for a single language.
+    Fetches availability for a single language CONCURRENTLY for performance.
     The rounded_start_time parameter is the key to caching.
     """
     # Use the passed-in rounded time to define the search window
@@ -297,16 +297,24 @@ def fetch_language_availability(team_members, api_key, selected_language, rounde
     language_slots = []
     members_for_lang = [m for m in team_members if selected_language in m["languages"]]
     
-    for member in members_for_lang:
-        user_slots = get_user_availability(
-            member["soloEventUri"], 
-            api_start_date, 
-            api_end_date, 
-            api_key
-        )
-        for slot_time in user_slots:
-            if slot_time >= minimum_booking_time:
-                language_slots.append({"specialist": member["name"], "dateTime": slot_time})
+    # --- MODIFIED: Use ThreadPoolExecutor for concurrent fetching ---
+    with ThreadPoolExecutor(max_workers=len(members_for_lang) or 1) as executor:
+        args = [(member, api_key) for member in members_for_lang]
+        
+        def fetch_availability(member, key):
+            """Helper function to fetch slots and return the member info."""
+            available_slots = get_user_availability(
+                member["soloEventUri"], api_start_date, api_end_date, key
+            )
+            return member, available_slots
+        
+        results = executor.map(lambda p: fetch_availability(*p), args)
+        
+        for member, user_slots in results:
+            for slot_time in user_slots:
+                if slot_time >= minimum_booking_time:
+                    language_slots.append({"specialist": member["name"], "dateTime": slot_time})
+    # --- END MODIFICATION ---
 
     language_slots.sort(key=lambda x: x["dateTime"])
     return language_slots
@@ -388,7 +396,7 @@ def fetch_organization_discovery_report(organization_uri, api_key):
         if not user_uri:
             continue
             
-        events_url = f"https.api.calendly.com/event_types?user={user_uri}&count=50"
+        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
         
         while events_url:
             try:
