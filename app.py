@@ -131,7 +131,7 @@ TEAM_DATA = [
 ]
 
 TEAM_TO_REPORT = 'EMEA'
-WORKING_DAYS_TO_CHECK = 7 # MODIFIED: Changed from 10 to 7
+WORKING_DAYS_TO_CHECK = 7 
 MINIMUM_NOTICE_HOURS = 21
 SLOT_DURATION_MINUTES = 120
 ADMIN_PASSWORD = "WinAsOne"
@@ -440,9 +440,13 @@ def calculate_true_slots(date_times):
     return count
 
 def get_next_working_days(n, timezone):
-    """Gets the next N working days."""
+    """
+    Gets the next N working days.
+    MODIFIED: Starts from tomorrow.
+    """
     days = []
-    current_day = datetime.now(timezone).date()
+    # Start from tomorrow in the specified timezone
+    current_day = datetime.now(timezone).date() + timedelta(days=1)
     while len(days) < n:
         if current_day.weekday() < 5: # Monday = 0, Sunday = 6
             days.append(current_day)
