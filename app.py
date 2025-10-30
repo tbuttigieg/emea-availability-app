@@ -616,7 +616,7 @@ if st.sidebar.button("Unlock Developer Tools"):
         st.session_state['admin_data'] = None
         st.session_state['org_report_data'] = None
     else:
-        st.sidebar.error("Incorrect developer password.", key="dev_err")
+        st.sidebar.error("Incorrect password.", key="dev_err")
         st.session_state['dev_authenticated'] = False
 
 
