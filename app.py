@@ -102,7 +102,7 @@ TEAM_DATA = [
         "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
         "languages": ["English"], # <-- UPDATED
         "team": "EMEA",
-        "active": True
+        "active": False
     },
     {
         "name": "Shamika Alphons",
