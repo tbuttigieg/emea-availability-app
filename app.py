@@ -287,8 +287,9 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
 @st.cache_data(ttl=600) # Cache for 10 minutes
 def fetch_language_availability(team_members, api_key, selected_language, rounded_start_time):
     """
-    Fetches availability for a single language using limited concurrency (4 workers)
-    to ensure mobile stability. The rounded_start_time parameter is the key to caching.
+    Fetches availability for a single language using limited concurrency (8 workers)
+    as a balance between desktop speed and mobile stability.
+    The rounded_start_time parameter is the key to caching.
     """
     # Use the passed-in rounded time to define the search window
     minimum_booking_time = rounded_start_time + timedelta(hours=MINIMUM_NOTICE_HOURS)
@@ -299,8 +300,8 @@ def fetch_language_availability(team_members, api_key, selected_language, rounde
     language_slots = []
     members_for_lang = [m for m in team_members if selected_language in m["languages"]]
 
-    # --- MODIFIED: Use ThreadPoolExecutor with max_workers=4 for mobile stability ---
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    # --- Use ThreadPoolExecutor with max_workers=8 ---
+    with ThreadPoolExecutor(max_workers=8) as executor:
         args = [(member, api_key) for member in members_for_lang]
 
         def fetch_availability(member, key):
