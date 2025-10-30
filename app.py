@@ -10,9 +10,9 @@ from concurrent.futures import ThreadPoolExecutor # For parallel API calls
 TEAM_DATA = [
     {
         "name": "Amina Maachoui",
-        "userUri": "https://api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0",
+        "userUri": "https://api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
         "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": ["English", "French"],
+        "languages": ["English", "French"], # <-- UPDATED
         "team": "EMEA",
         "active": False
     },
@@ -98,11 +98,11 @@ TEAM_DATA = [
     },
     {
         "name": "Sarah Jopp",
-        "userUri": "https://api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe",
-        "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e",
-        "languages": ["English"],
+        "userUri": "https://api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
+        "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
+        "languages": ["English"], # <-- UPDATED
         "team": "EMEA",
-        "active": False
+        "active": True
     },
     {
         "name": "Shamika Alphons",
@@ -116,7 +116,7 @@ TEAM_DATA = [
         "name": "Tom Webb",
         "userUri": "", # TODO: Add userUri
         "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": ["English", "German"],
+        "languages": ["English", "German"], # <-- UPDATED
         "team": "EMEA",
         "active": False
     },
@@ -131,15 +131,13 @@ TEAM_DATA = [
 ]
 
 TEAM_TO_REPORT = 'EMEA'
-WORKING_DAYS_TO_CHECK = 7 
+WORKING_DAYS_TO_CHECK = 10 
 MINIMUM_NOTICE_HOURS = 21
 SLOT_DURATION_MINUTES = 120
-ADMIN_PASSWORD = "WinAsOne"
-DEV_PASSWORD = "WinAsOneDev"
+ADMIN_PASSWORD = "WinAsOne" 
+DEV_PASSWORD = "WinAsOneDev" 
 WORKING_HOURS_START = 9
 WORKING_HOURS_END = 17
-CACHE_INTERVAL_MINUTES = 10
-# DAYS_TO_SHOW_IMMEDIATELY = 3 # REMOVED: No longer needed
 
 LANGUAGES = ["English", "German", "French", "Italian", "Spanish"]
 TIMEZONE_OPTIONS = {
@@ -160,15 +158,6 @@ def convert_df_to_csv(df):
     """Converts a DataFrame to a CSV string for downloading."""
     return df.to_csv(index=True).encode('utf-8')
 
-def get_rounded_now(interval_minutes=CACHE_INTERVAL_MINUTES):
-    """
-    Rounds the current UTC time down to the nearest X-minute interval.
-    This creates a stable time window for caching API calls.
-    """
-    now = datetime.now(pytz.UTC)
-    minutes = (now.minute // interval_minutes) * interval_minutes
-    return now.replace(minute=minutes, second=0, microsecond=0)
-
 # --- CORE FUNCTIONS ---
 
 def get_filtered_team_members():
@@ -178,7 +167,7 @@ def get_filtered_team_members():
         if m["active"] and m["team"] == TEAM_TO_REPORT and m["userUri"] and m["soloEventUri"]
     ]
 
-@st.cache_data(ttl=600) # Cache for 10 minutes (600 seconds)
+@st.cache_data(ttl=600)
 def get_user_availability(solo_event_uri, start_date, end_date, api_key):
     """Fetches available slots from the Calendly API for a single user."""
     if not api_key: return []
@@ -186,10 +175,10 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     all_slots = []
     base_url = "https://api.calendly.com/event_type_available_times"
-
+    
     loop_start_date = start_date
     while loop_start_date < end_date:
-        loop_end_date = loop_start_date + timedelta(days=7) # API limit is 7 days per request
+        loop_end_date = loop_start_date + timedelta(days=7)
         if loop_end_date > end_date: loop_end_date = end_date
 
         params = {
@@ -205,12 +194,12 @@ def get_user_availability(solo_event_uri, start_date, end_date, api_key):
                 if slot.get("status") == "available":
                     start_time_str = slot["start_time"].replace('Z', '+00:00')
                     all_slots.append(datetime.fromisoformat(start_time_str))
-        except requests.exceptions.HTTPError:
-            pass
-        loop_start_date += timedelta(days=7) # Move to next week
+        except requests.exceptions.HTTPError: 
+            pass 
+        loop_start_date += timedelta(days=7)
     return all_slots
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600) 
 def get_organization_uri(api_key):
     """Fetches the organization URI associated with the API key."""
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
@@ -226,33 +215,33 @@ def get_organization_uri(api_key):
              st.error(f"Calendly API Error (User): {e.response.json().get('message', 'Unknown Error')}", icon="🚨")
         return None
 
-@st.cache_data(ttl=600) # Cache for 10 minutes
+@st.cache_data(ttl=600)
 def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
     """
     Fetches all booked appointments for an entire organization and
     returns a count of long events per user URI.
     """
     counts_by_user_uri = defaultdict(int)
-    if not api_key or not organization_uri:
+    if not api_key or not organization_uri: 
         return counts_by_user_uri
 
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     base_url = "https://api.calendly.com/scheduled_events"
-
+    
     params = {
         'organization': organization_uri,
         'min_start_time': format_to_iso_z(start_date),
         'max_start_time': format_to_iso_z(end_date),
         'count': 100,
-        'status': 'active'
+        'status': 'active' 
     }
-
+    
     while base_url:
         try:
             response = requests.get(base_url, headers=headers, params=params)
-            response.raise_for_status()
+            response.raise_for_status() 
             data = response.json()
-
+            
             for event in data.get("collection", []):
                 try:
                     start_str = event['start_time'].replace('Z', '+00:00')
@@ -260,87 +249,66 @@ def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
                     start_time = datetime.fromisoformat(start_str)
                     end_time = datetime.fromisoformat(end_str)
                     duration_minutes = (end_time - start_time).total_seconds() / 60
-
+                    
                     if duration_minutes >= 60:
                         user_uri = event.get("event_memberships", [{}])[0].get("user")
                         if user_uri:
                             counts_by_user_uri[user_uri] += 1
                 except Exception:
-                    pass
+                    pass 
 
             base_url = data.get("pagination", {}).get("next_page")
-            params = {}
-
+            params = {} 
+            
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 403:
                  st.error("API Key Error: This key does not have Organization-level permission to read scheduled events for all users. Please use an Admin-generated token.", icon="🚨")
             else:
                  st.error(f"Calendly API Error (Events): {e.response.json().get('message', 'Unknown Error')}", icon="🚨")
-            base_url = None
+            base_url = None 
         except Exception as e:
             st.error(f"A non-HTTP error occurred: {e}", icon="🚨")
             base_url = None
-
+            
     return counts_by_user_uri
 
-# --- THIS IS THE KEY FUNCTION FOR PERFORMANCE ---
-@st.cache_data(ttl=600) # Cache for 10 minutes
-def fetch_language_availability(team_members, api_key, selected_language, rounded_start_time):
-    """
-    Fetches availability for a single language using limited concurrency (8 workers)
-    as a balance between desktop speed and mobile stability.
-    The rounded_start_time parameter is the key to caching.
-    """
-    # Use the passed-in rounded time to define the search window
-    minimum_booking_time = rounded_start_time + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_start_date = rounded_start_time + timedelta(minutes=1)
-    # MODIFIED: Adjust end_date based on WORKING_DAYS_TO_CHECK
-    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4) # Add buffer for safety
+def fetch_language_availability(team_members, api_key, selected_language):
+    """Fetches availability for a single language using concurrent API calls for speed."""
+    utc, now = pytz.UTC, datetime.now(pytz.UTC)
+    minimum_booking_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
+    api_start_date = now + timedelta(minutes=1)
+    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
 
     language_slots = []
     members_for_lang = [m for m in team_members if selected_language in m["languages"]]
-
-    # --- Use ThreadPoolExecutor with max_workers=8 ---
-    with ThreadPoolExecutor(max_workers=8) as executor:
-        args = [(member, api_key) for member in members_for_lang]
-
-        def fetch_availability(member, key):
-            """Helper function to fetch slots and return the member info."""
-            available_slots = get_user_availability(
-                member["soloEventUri"], api_start_date, api_end_date, key
-            )
-            return member, available_slots
-
-        results = executor.map(lambda p: fetch_availability(*p), args)
-
-        for member, user_slots in results:
+    
+    with ThreadPoolExecutor(max_workers=len(members_for_lang) or 1) as executor:
+        args = [(m["soloEventUri"], api_start_date, api_end_date, api_key) for m in members_for_lang]
+        results = executor.map(lambda p: get_user_availability(*p), args)
+        for member, user_slots in zip(members_for_lang, results):
             for slot_time in user_slots:
                 if slot_time >= minimum_booking_time:
                     language_slots.append({"specialist": member["name"], "dateTime": slot_time})
-
     language_slots.sort(key=lambda x: x["dateTime"])
     return language_slots
 
-# --- THIS IS THE KEY FUNCTION FOR PERFORMANCE ---
-@st.cache_data(ttl=600) # Cache for 10 minutes
-def fetch_all_team_availability(team_members, api_key, rounded_start_time):
+def fetch_all_team_availability(team_members, api_key):
     """
-    Fetches admin data. The rounded_start_time parameter is the key to caching.
-    Uses full concurrency as it's less likely to be run on mobile.
+    Fetches availability (concurrently) AND all scheduled events (one big call) 
+    for all team members.
     """
-    # Use the passed-in rounded time to define the search window
-    min_availability_time = rounded_start_time + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_availability_start = rounded_start_time + timedelta(minutes=1)
-    # MODIFIED: Adjust end_date based on WORKING_DAYS_TO_CHECK
-    api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) # Add buffer for safety
-
-    api_scheduled_start = rounded_start_time.replace(hour=0, minute=0, second=0, microsecond=0)
-    # MODIFIED: Adjust end_date based on WORKING_DAYS_TO_CHECK
-    api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) # Add buffer for safety
-
+    utc, now = pytz.UTC, datetime.now(pytz.UTC)
+    
+    min_availability_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
+    api_availability_start = now + timedelta(minutes=1)
+    api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
+    
+    api_scheduled_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
+    
     availability_by_specialist = defaultdict(list)
     raw_slots_for_summary = []
-    booked_event_counts = {}
+    booked_event_counts = {} 
 
     with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
         args = [(m, api_key) for m in team_members]
@@ -355,7 +323,7 @@ def fetch_all_team_availability(team_members, api_key, rounded_start_time):
                 if slot_time >= min_availability_time:
                     availability_by_specialist[member["name"]].append(slot_time)
                     raw_slots_for_summary.append({"specialist_info": member, "dateTime": slot_time})
-
+    
     organization_uri = get_organization_uri(api_key)
     if organization_uri:
         counts_by_user_uri = fetch_all_scheduled_events(
@@ -369,18 +337,20 @@ def fetch_all_team_availability(team_members, api_key, rounded_start_time):
 
     return availability_by_specialist, raw_slots_for_summary, booked_event_counts
 
+# --- NEW: Function for Organization Discovery ---
 @st.cache_data(ttl=3600) # Cache for 1 hour
 def fetch_organization_discovery_report(organization_uri, api_key):
     """Fetches all users and their event types for an entire organization."""
     if not api_key or not organization_uri:
         return []
-
+    
     headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
     all_user_event_data = []
 
+    # 1. Get all users in the organization
     users_url = f"https://api.calendly.com/organization_memberships?organization={organization_uri}&count=100"
     all_users = []
-
+    
     while users_url:
         try:
             response = requests.get(users_url, headers=headers)
@@ -391,25 +361,27 @@ def fetch_organization_discovery_report(organization_uri, api_key):
         except requests.exceptions.HTTPError as e:
             st.error(f"Failed to fetch organization users: {e.response.json().get('message')}", icon="🚨")
             users_url = None
-
+    
+    # 2. For each user, get their event types
     for user_membership in all_users:
         user = user_membership.get("user", {})
         user_name = user.get("name")
         user_email = user.get("email")
         user_uri = user.get("uri")
-
+        
         if not user_uri:
             continue
 
         events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
-
+        
         while events_url:
             try:
                 response = requests.get(events_url, headers=headers)
                 response.raise_for_status()
                 data = response.json()
-
+                
                 for event in data.get("collection", []):
+                    # Only include solo events
                     if event.get("kind") == "solo":
                         all_user_event_data.append({
                             "User Name": user_name,
@@ -419,10 +391,10 @@ def fetch_organization_discovery_report(organization_uri, api_key):
                             "Event Type URI": event.get("uri"),
                             "Event Active": event.get("active", False)
                         })
-
+                
                 events_url = data.get("pagination", {}).get("next_page")
             except requests.exceptions.HTTPError:
-                events_url = None
+                events_url = None # Silently fail for one user's events
 
     return all_user_event_data
 
@@ -440,36 +412,28 @@ def calculate_true_slots(date_times):
     return count
 
 def get_next_working_days(n, timezone):
-    """
-    Gets the next N working days.
-    MODIFIED: Starts from tomorrow.
-    """
+    """Gets the next N working days."""
     days = []
-    # Start from tomorrow in the specified timezone
-    current_day = datetime.now(timezone).date() + timedelta(days=1)
+    current_day = datetime.now(timezone).date()
     while len(days) < n:
-        if current_day.weekday() < 5: # Monday = 0, Sunday = 6
+        if current_day.weekday() < 5:
             days.append(current_day)
         current_day += timedelta(days=1)
     return days
 
 # --- UI HELPER FUNCTIONS ---
 def display_main_availability(all_slots, language, timezone, timezone_friendly):
-    """
-    Renders the main availability view for a selected language.
-    MODIFIED: Shows all available days directly (no expander).
-    """
+    """Renders the main availability view for a selected language."""
     if all_slots is None:
-        return
+        return 
 
     slots_by_day = defaultdict(list)
-    # Use the globally configured WORKING_DAYS_TO_CHECK
     working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, timezone)
     for slot in all_slots:
         day = slot["dateTime"].astimezone(timezone).date()
         if day in working_days:
             slots_by_day[day].append(slot)
-
+    
     if not slots_by_day:
          st.info(f"No upcoming availability found for **{language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
          return
@@ -487,29 +451,24 @@ def display_main_availability(all_slots, language, timezone, timezone_friendly):
         "font-weight: 500;"
     )
 
-    # Function to render a single day
-    def render_day(day, day_slots_for_render):
-        st.subheader(day.strftime('%A, %d %B %Y'))
-        unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots_for_render)))
-        time_tags = "".join([f"<div style='{time_slot_style}'>🕒 {time_str}</div>" for time_str in unique_times])
-        st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{time_tags}</div>", unsafe_allow_html=True)
-        st.divider()
-
-    # --- MODIFICATION: Render all available days directly ---
     for day in working_days:
         if day in slots_by_day:
-            render_day(day, slots_by_day[day])
-    # --- END MODIFICATION ---
+            st.subheader(day.strftime('%A, %d %B %Y'))
+            day_slots = slots_by_day[day]
+            unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots)))
+            
+            time_tags = "".join([f"<div style='{time_slot_style}'>🕒 {time_str}</div>" for time_str in unique_times])
+            st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{time_tags}</div>", unsafe_allow_html=True)
+            
+            st.divider()
 
-    # Summary remains the same
     st.header("Summary of Daily Availability")
     summary_data = []
-    # Use the ordered list of working_days to ensure summary table is chronological
     for day in working_days:
          if day in slots_by_day:
-            day_slots_summary = slots_by_day[day]
+            day_slots = slots_by_day[day]
             slots_by_specialist = defaultdict(list)
-            for slot in day_slots_summary:
+            for slot in day_slots:
                 slots_by_specialist[slot['specialist']].append(slot['dateTime'])
             total_true_slots = sum(calculate_true_slots(s_slots) for s_slots in slots_by_specialist.values())
             summary_data.append({"Date": day.strftime('%A, %d %B'), "Bookable Slots": total_true_slots})
@@ -521,90 +480,62 @@ def display_main_availability(all_slots, language, timezone, timezone_friendly):
 st.set_page_config(layout="wide")
 st.title("EMEA Onboarding Team Availability")
 
-# --- Initialize session state ---
-if 'availability_data' not in st.session_state:
-    st.session_state['availability_data'] = None
 if 'last_params' not in st.session_state:
     st.session_state['last_params'] = {}
-if 'admin_authenticated' not in st.session_state:
+if 'availability_data' not in st.session_state:
+    st.session_state['availability_data'] = None
+if 'admin_authenticated' not in st.session_state: 
     st.session_state['admin_authenticated'] = False
-if 'dev_authenticated' not in st.session_state:
+if 'dev_authenticated' not in st.session_state: # <-- NEW: Session state for dev
     st.session_state['dev_authenticated'] = False
-if 'admin_data' not in st.session_state:
+if 'admin_data' not in st.session_state: 
     st.session_state['admin_data'] = None
 if 'org_report_data' not in st.session_state:
     st.session_state['org_report_data'] = None
 
+
+# --- Sidebar ---
+st.sidebar.header("Options")
+selected_language = st.sidebar.selectbox("Select language", options=LANGUAGES)
+selected_timezone_friendly = st.sidebar.selectbox("Select your timezone", options=TIMEZONE_OPTIONS.keys(), index=list(TIMEZONE_OPTIONS.keys()).index(DEFAULT_TIMEZONE_FRIENDLY))
+selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
+
 team_members = get_filtered_team_members()
 calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
 
-# --- MAIN PAGE CONTROLS (MOVED FROM SIDEBAR) ---
-st.write("Select your language and timezone to find open slots.")
+current_params = {'lang': selected_language, 'tz': selected_timezone_friendly}
+if current_params != st.session_state.get('last_params'):
+    st.session_state['availability_data'] = None 
+    st.session_state['admin_data'] = None 
+    st.session_state['org_report_data'] = None # Clear all data on param change
 
-col1, col2 = st.columns([1, 1])
-with col1:
-    selected_language = st.selectbox("Select language", options=LANGUAGES, key="main_lang")
-with col2:
-    selected_timezone_friendly = st.selectbox(
-        "Select your timezone",
-        options=TIMEZONE_OPTIONS.keys(),
-        index=list(TIMEZONE_OPTIONS.keys()).index(DEFAULT_TIMEZONE_FRIENDLY),
-        key="main_tz"
-    )
-
-selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
-
-# --- Get Availability Button ---
-if st.button("Get Availability", type="primary", use_container_width=True):
-    st.session_state['availability_data'] = None # Force a refresh
-    st.session_state['admin_data'] = None # Clear admin data
-    st.session_state['org_report_data'] = None # Clear dev data
-
+if st.session_state['availability_data'] is None:
     if not team_members:
         st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
     else:
         with st.spinner(f"Fetching latest availability for {selected_language}..."):
-            rounded_now = get_rounded_now()
-            all_slots = fetch_language_availability(
-                team_members, calendly_api_key, selected_language, rounded_now
-            )
+            all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
             st.session_state['availability_data'] = all_slots
-            st.session_state['last_params'] = {'lang': selected_language, 'tz_friendly': selected_timezone_friendly}
-else:
-    # On first load, or if no button pressed, show instruction
-    if st.session_state['availability_data'] is None:
-        st.info("Click 'Get Availability' to see the latest slots.")
+            st.session_state['last_params'] = current_params
 
-st.divider()
+display_main_availability(st.session_state['availability_data'], selected_language, selected_timezone, selected_timezone_friendly)
 
-# --- Main Page Display ---
-if st.session_state['availability_data'] is not None:
-    last_params = st.session_state.get('last_params', {})
-    lang_to_display = last_params.get('lang', selected_language)
-    tz_friendly_to_display = last_params.get('tz_friendly', selected_timezone_friendly)
-    tz_to_display = pytz.timezone(TIMEZONE_OPTIONS.get(tz_friendly_to_display, "Europe/London"))
-
-    display_main_availability(
-        st.session_state['availability_data'],
-        lang_to_display,
-        tz_to_display,
-        tz_friendly_to_display
-    )
-
-# --- SIDEBAR: Admin & Dev Sections ---
+# --- Admin Section ---
+st.sidebar.divider()
 st.sidebar.header("Admin Access")
 password = st.sidebar.text_input("Enter password", type="password", key="admin_pass")
 
 if st.sidebar.button("Unlock Admin View"):
     if password == ADMIN_PASSWORD:
         st.session_state['admin_authenticated'] = True
-        st.session_state['dev_authenticated'] = False
-        st.session_state['admin_data'] = None
-        st.session_state['org_report_data'] = None
+        st.session_state['dev_authenticated'] = False # Log out of dev
+        st.session_state['admin_data'] = None 
+        st.session_state['org_report_data'] = None 
     else:
         st.sidebar.error("Incorrect password.", key="admin_err")
         st.session_state['admin_authenticated'] = False
 
+# --- Developer Section ---
 st.sidebar.divider()
 st.sidebar.header("Developer Access")
 dev_password = st.sidebar.text_input("Enter developer password", type="password", key="dev_pass")
@@ -612,7 +543,7 @@ dev_password = st.sidebar.text_input("Enter developer password", type="password"
 if st.sidebar.button("Unlock Developer Tools"):
     if dev_password == DEV_PASSWORD:
         st.session_state['dev_authenticated'] = True
-        st.session_state['admin_authenticated'] = False
+        st.session_state['admin_authenticated'] = False # Log out of admin
         st.session_state['admin_data'] = None
         st.session_state['org_report_data'] = None
     else:
@@ -626,39 +557,32 @@ if st.session_state.get('admin_authenticated'):
     st.divider()
     st.header("🔒 Admin View")
 
-    # --- MODIFIED: Added a button to "lazy load" the admin data ---
-    if st.button("Load Admin Reports", key="load_admin_data"):
-        st.session_state['admin_data'] = None # Force a refresh
+    if st.session_state['admin_data'] is None:
         with st.spinner("Fetching all team availability for admin view..."):
             active_team_members = get_filtered_team_members()
-            rounded_now = get_rounded_now()
             admin_availability, raw_slots, booked_counts = fetch_all_team_availability(
-                active_team_members,
-                calendly_api_key,
-                rounded_now
+                active_team_members, 
+                calendly_api_key
             )
             st.session_state['admin_data'] = (admin_availability, raw_slots, booked_counts)
-
-    # This data display logic only runs if admin_data exists in session state
+    
     if st.session_state['admin_data'] is None:
-        st.info("Click 'Load Admin Reports' to fetch and display the admin dashboard.")
+        st.error("Failed to load admin data. Check API key and permissions.")
     else:
         admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
-
-        if not admin_availability and not booked_counts and not raw_slots:
+    
+        if not admin_availability and not booked_counts:
             st.warning("No availability or booked events found for any team member.")
         else:
             active_team_members = get_filtered_team_members()
-            # Use the default London timezone for consistent Admin reporting
             uk_timezone = pytz.timezone("Europe/London")
-            # Use the globally configured WORKING_DAYS_TO_CHECK for Admin reports
             working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, uk_timezone)
-
+            
             # --- 1. Language Summary ---
             st.subheader("Team Summary by Language")
             st.write("Total bookable slots for the entire team.")
             st.info("💡 For the best experience, view these tables on a desktop computer.")
-
+            
             lang_summary_slots = defaultdict(lambda: defaultdict(int))
             slots_by_specialist_day = defaultdict(lambda: defaultdict(list))
 
@@ -667,7 +591,7 @@ if st.session_state.get('admin_authenticated'):
                 if day in working_days:
                     specialist_name = slot['specialist_info']['name']
                     slots_by_specialist_day[specialist_name][day].append(slot['dateTime'])
-
+            
             for specialist, day_slots in slots_by_specialist_day.items():
                 specialist_info = next((m for m in active_team_members if m['name'] == specialist), None)
                 if specialist_info:
@@ -711,16 +635,16 @@ if st.session_state.get('admin_authenticated'):
                         slots_by_day[day].append(slot_time)
                 for day, day_slots in slots_by_day.items():
                     heatmap_data[specialist][day.strftime('%a %d/%m')] = calculate_true_slots(day_slots)
-
+            
             heatmap_df = pd.DataFrame(heatmap_data).T
             heatmap_df.index.name = "Specialist"
             heatmap_df = heatmap_df.reindex(sorted(heatmap_df.index))
-
+            
             def color_heatmap_cells(val):
                 if val == 0: return 'background-color: #ffcccb; color: black;'
                 elif 1 <= val <= 2: return 'background-color: #d4edda; color: black;'
                 else: return 'background-color: #28a745; color: white;'
-
+            
             st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
             st.download_button(
                  label="Download Heatmap as CSV",
@@ -729,21 +653,20 @@ if st.session_state.get('admin_authenticated'):
                  mime="text/csv",
              )
             st.divider()
-
+            
             # --- 3. Booked Appointments Report ---
             st.subheader("Booked Appointments Report")
             st.write(f"Total count of booked appointments 60 minutes or longer in the next {WORKING_DAYS_TO_CHECK} working days.")
-
+            
             report_data = []
-            # Ensure all active members are in the report, even if they have 0 booked events
             specialist_names = sorted([m['name'] for m in active_team_members])
-
+            
             for specialist in specialist_names:
                 report_data.append({
-                    "Specialist": specialist,
-                    "Booked Appointments (60+ min)": booked_counts.get(specialist, 0) # Use .get with default 0
+                    "Specialist": specialist, 
+                    "Booked Appointments (60+ min)": booked_counts.get(specialist, 0)
                 })
-
+                
             report_df = pd.DataFrame(report_data).set_index("Specialist")
             st.dataframe(report_df, use_container_width=True)
             st.download_button(
@@ -756,12 +679,10 @@ if st.session_state.get('admin_authenticated'):
 
             # --- 4. Detailed Specialist Availability ---
             st.subheader("Detailed Specialist Availability")
-            # Ensure all active members are listed, even if they have 0 available slots
-            sorted_specialists = sorted([m['name'] for m in active_team_members])
+            sorted_specialists = sorted(admin_availability.keys())
             for specialist in sorted_specialists:
-                 # Use .get with default empty list
-                slots = admin_availability.get(specialist, [])
-                with st.expander(f"**{specialist}** - {len(slots)} available slots found"):
+                with st.expander(f"**{specialist}** - {len(admin_availability.get(specialist, []))} available slots found"):
+                    slots = admin_availability.get(specialist)
                     if not slots:
                         st.write("No availability in the upcoming period.")
                         continue
@@ -770,19 +691,18 @@ if st.session_state.get('admin_authenticated'):
                         day = slot_time_utc.astimezone(uk_timezone).date()
                         if day in working_days:
                             slots_by_day[day].append(slot_time_utc.astimezone(uk_timezone))
-
+                    
                     if not slots_by_day:
                         st.write("No availability on upcoming weekdays.")
                         continue
 
-                    # Iterate through the ordered working_days list
                     for day in working_days:
                          if day in slots_by_day:
                             st.markdown(f"**{day.strftime('%A, %d %B')}**")
                             day_slots = sorted(slots_by_day[day])
                             time_strings = [f"`{s.strftime('%H:%M')}`" for s in day_slots]
                             st.write(" | ".join(time_strings))
-
+            
             st.divider()
 
 # --- MAIN PAGE - DEV VIEW ---
@@ -795,8 +715,7 @@ if st.session_state.get('dev_authenticated'):
     st.subheader("Organization Discovery Tool")
     st.write("A tool to find all users and their 'solo' event types in your Calendly organization. Use this to find the URIs needed to build new team apps.")
     st.warning("This tool scans your *entire* organization and may be slow.")
-
-    # --- MODIFIED: The button now only triggers the fetch ---
+    
     if st.button("Run Organization Discovery Report"):
         st.session_state['org_report_data'] = None # Clear old data
         organization_uri = get_organization_uri(calendly_api_key)
@@ -811,10 +730,7 @@ if st.session_state.get('dev_authenticated'):
         else:
             st.error("Could not retrieve organization URI. Check API Key permissions.")
 
-    # --- MODIFIED: Display logic is separate and checks session state ---
-    if st.session_state['org_report_data'] is None:
-        st.info("Click 'Run Organization Discovery Report' to fetch data.")
-    else:
+    if st.session_state['org_report_data'] is not None:
         df = st.session_state['org_report_data']
         st.dataframe(df, use_container_width=True)
         st.download_button(
