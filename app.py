@@ -9,733 +9,321 @@ from concurrent.futures import ThreadPoolExecutor # For parallel API calls
 # --- CONFIGURATION ---
 TEAM_DATA = [
     {
-        "name": "Amina Maachoui",
-        "userUri": "https://api.calendly.com/users/c4fc4718-ed3d-4281-9035-d606f2b09ea0", 
-        "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": ["English", "French"], # <-- UPDATED
-        "team": "EMEA",
-        "active": False
-    },
-    {
-        "name": "Angelique Berry",
-        "userUri": "https://api.calendly.com/users/BFGD5IENSLHBGKCA",
-        "soloEventUri": "https://api.calendly.com/event_types/69ab400d-beb3-4ec1-9fec-692834cca779",
+        "name": "Anthony Ferlazzo",
+        "userUri": "https://api.calendly.com/users/HCHECMCAGLZOSHN7",
+        "soloEventUri": "https://api.calendly.com/event_types/ECB2NPVJCAKUXGR7",
         "languages": ["English"],
-        "team": "EMEA",
+        "team": "APAC",
         "active": True
     },
     {
-        "name": "Dennis Piethe",
-        "userUri": "https://api.calendly.com/users/HHAHQ36MF72PWSDJ",
-        "soloEventUri": "https://api.calendly.com/event_types/75b9658e-71ee-4a74-9458-ca60b4c527fa",
-        "languages": ["English", "German"],
-        "team": "EMEA",
-        "active": True
-    },
-    {
-        "name": "Harry Britten",
-        "userUri": "https://api.calendly.com/users/0db643a2-44f4-46e1-ac2b-ece863b5045d",
-        "soloEventUri": "https://api.calendly.com/event_types/c2a5c4df-4895-4b0c-ab71-4e3c64ab0e2d",
-        "languages": ["English", "French"],
-        "team": "EMEA",
-        "active": True
-    },
-    {
-        "name": "Izabella Ferencz",
-        "userUri": "https://api.calendly.com/users/BCHFHLGAUO5OTUFG",
-        "soloEventUri": "https://api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
-        "languages": ["English", "French"],
-        "team": "EMEA",
-        "active": False
-    },
-    {
-        "name": "Jair Eastbury",
-        "userUri": "https://api.calendly.com/users/DBDGGHZOPYXBMELD",
-        "soloEventUri": "https://api.calendly.com/event_types/c3a8471d-321a-42e7-be7f-0899b84223f5",
+        "name": "Gem Rooke",
+        "userUri": "https://api.calendly.com/users/bfc287f8-5679-44c2-92bf-878d73a5a34d",
+        "soloEventUri": "https://api.calendly.com/event_types/e8674269-3543-4d7a-9f86-df9e803ba3b6",
         "languages": ["English"],
-        "team": "EMEA",
+        "team": "APAC",
         "active": True
     },
     {
-        "name": "Karin Anders",
-        "userUri": "https://api.calendly.com/users/DEGHPMACPCLOCLAA",
-        "soloEventUri": "https://api.calendly.com/event_types/6778bb57-bd8c-4e57-8b2b-5c51de95acbd",
-        "languages": ["English", "German"],
-        "team": "EMEA",
+        "name": "CP Kelleyen",
+        "userUri": "https://api.calendly.com/users/ec1f3b31-8a31-4359-84f2-e0f8b6793b41",
+        "soloEventUri": "https://api.calendly.com/event_types/8973b256-0761-4f8e-b250-7bced9ab0647",
+        "languages": ["English"],
+        "team": "APAC",
         "active": True
     },
     {
-        "name": "Malik Vazirna-Singh",
-        "userUri": "https://api.calendly.com/users/EDGGEI7F6COAYX3E",
-        "soloEventUri": "https://api.calendly.com/event_types/cb749cea-8128-43a4-bb66-46427f6b4d4c",
-        "languages": ["English", "French", "Spanish", "Italian"],
-        "team": "EMEA",
+        "name": "Lip Rad",
+        "userUri": "https://api.calendly.com/users/EFHAAIGCGF6Q6R3D",
+        "soloEventUri": "https://api.calendly.com/event_types/FCACKUDXCA4M4DJ5",
+        "languages": ["English"],
+        "team": "APAC",
         "active": True
     },
-    {
-        "name": "Natali Lilovska",
-        "userUri": "https://api.calendly.com/users/eb2c8c12-bdc3-49ec-a3c4-f11ef0b72e7e",
-        "soloEventUri": "https://api.calendly.com/event_types/0a8c2cdf-2255-4a0a-b081-d8fb69584b78",
-        "languages": ["English", "German"],
-        "team": "EMEA",
-        "active": True
-    },
-    {
-        "name": "Nina Leist",
-        "userUri": "https://api.calendly.com/users/EAGAHVEPVZKHOGGB",
-        "soloEventUri": "https://api.calendly.com/event_types/75f3f3a1-a4e0-4659-8fb8-efefadcd48b9",
-        "languages": ["English", "Spanish", "German", "Italian", "French"],
-        "team": "EMEA",
-        "active": True
-    },
-    {
-        "name": "Sara Pomparelli",
-        "userUri": "https://api.calendly.com/users/b0b405a2-dcf8-4e9f-badc-1de47683400a",
-        "soloEventUri": "https://api.calendly.com/event_types/5464d38a-10bc-4ede-ba84-6f924b5e98e6",
-        "languages": ["English", "Italian"],
-        "team": "EMEA",
-        "active": True
-    },
-    {
-        "name": "Sarah Jopp",
-        "userUri": "https://api.calendly.com/users/269b9b21-5e44-41d1-b641-4f48c6549cfe", 
-        "soloEventUri": "https://api.calendly.com/event_types/cf5f3c50-5956-4e9b-832e-074d09dcfb3e", 
-        "languages": ["English"], # <-- UPDATED
-        "team": "EMEA",
-        "active": True
-    },
-    {
-        "name": "Shamika Alphons",
-        "userUri": "https://api.calendly.com/users/FHDGBJ2IF6MEFNGQ",
-        "soloEventUri": "https://api.calendly.com/event_types/6bfc26c7-dc18-48fa-a757-ba670b012446",
-        "languages": ["English", "German"],
-        "team": "EMEA",
-        "active": True
-    },
-    {
-        "name": "Tom Webb",
-        "userUri": "", # TODO: Add userUri
-        "soloEventUri": "", # TODO: Add soloEventUri
-        "languages": ["English", "German"], # <-- UPDATED
-        "team": "EMEA",
-        "active": False
-    },
-    {
-        "name": "Victor Cabrera",
-        "userUri": "https://api.calendly.com/users/GFEFGA4NO2WXJVA5",
-        "soloEventUri": "https://api.calendly.com/event_types/67d128a6-5817-4967-ae85-9fba44012703",
-        "languages": ["English", "Spanish"],
-        "team": "EMEA",
-        "active": True
-    }
 ]
 
-TEAM_TO_REPORT = 'EMEA'
-WORKING_DAYS_TO_CHECK = 10 
-MINIMUM_NOTICE_HOURS = 21
-SLOT_DURATION_MINUTES = 120
-ADMIN_PASSWORD = "WinAsOne" 
-DEV_PASSWORD = "WinAsOneDev" 
-WORKING_HOURS_START = 9
-WORKING_HOURS_END = 17
+# Supported languages for filtering
+SUPPORTED_LANGUAGES = ["English"]
 
-LANGUAGES = ["English", "German", "French", "Italian", "Spanish"]
-TIMEZONE_OPTIONS = {
-    "GMT / BST (London, Dublin)": "Europe/London",
-    "CET (Paris, Berlin, Rome)": "Europe/Paris",
-    "EET (Athens, Helsinki)": "Europe/Helsinki",
-    "GST (Dubai, Abu Dhabi)": "Asia/Dubai",
+# Timezone configuration
+# Map display strings to a primary IANA timezone for that group.
+# The primary timezone will be used for calculations.
+TIMEZONE_MAP = {
+    "UTC+7 (Bangkok)": "Asia/Bangkok",
+    "UTC+8 (Singapore/Manila/Perth)": "Asia/Singapore",
+    "UTC+9:30 (Darwin)": "Australia/Darwin",
+    "UTC+10 (Melbourne/Sydney/Brisbane)": "Australia/Melbourne",
+    "UTC+12 (Auckland)": "Pacific/Auckland",
 }
-DEFAULT_TIMEZONE_FRIENDLY = "GMT / BST (London, Dublin)"
 
-# --- GLOBAL HELPERS ---
-def format_to_iso_z(dt):
-    """Formats a datetime object to the ISO Z format Calendly expects."""
-    return dt.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+# The list of options to show in the dropdown
+TIMEZONES_DISPLAY = list(TIMEZONE_MAP.keys())
+# The default display string
+DEFAULT_TIMEZONE_DISPLAY = "UTC+10 (Melbourne/Sydney/Brisbane)"
 
-@st.cache_data
-def convert_df_to_csv(df):
-    """Converts a DataFrame to a CSV string for downloading."""
-    return df.to_csv(index=True).encode('utf-8')
+# Check if default is valid, otherwise use first
+if DEFAULT_TIMEZONE_DISPLAY in TIMEZONES_DISPLAY:
+    default_tz_index = TIMEZONES_DISPLAY.index(DEFAULT_TIMEZONE_DISPLAY)
+else:
+    default_tz_index = 0
 
-# --- CORE FUNCTIONS ---
+# Other constants
+DAYS_TO_SHOW = 14 # Show availability for the next 14 days
+MAX_WORKERS = 10 # Number of parallel threads to fetch data
 
-def get_filtered_team_members():
-    """Filters the hardcoded TEAM_DATA list."""
-    return [
-        m for m in TEAM_DATA
-        if m["active"] and m["team"] == TEAM_TO_REPORT and m["userUri"] and m["soloEventUri"]
-    ]
+# --- PAGE CONFIG ---
+st.set_page_config(
+    page_title="APAC Availability",
+    page_icon="🌏",
+    layout="wide"
+)
 
-@st.cache_data(ttl=600)
-def get_user_availability(solo_event_uri, start_date, end_date, api_key):
-    """Fetches available slots from the Calendly API for a single user."""
-    if not api_key: return []
-
-    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    all_slots = []
-    base_url = "https://api.calendly.com/event_type_available_times"
-    
-    loop_start_date = start_date
-    while loop_start_date < end_date:
-        loop_end_date = loop_start_date + timedelta(days=7)
-        if loop_end_date > end_date: loop_end_date = end_date
-
-        params = {
-            'event_type': solo_event_uri,
-            'start_time': format_to_iso_z(loop_start_date),
-            'end_time': format_to_iso_z(loop_end_date)
-        }
-        try:
-            response = requests.get(base_url, headers=headers, params=params)
-            response.raise_for_status()
-            data = response.json()
-            for slot in data.get("collection", []):
-                if slot.get("status") == "available":
-                    start_time_str = slot["start_time"].replace('Z', '+00:00')
-                    all_slots.append(datetime.fromisoformat(start_time_str))
-        except requests.exceptions.HTTPError: 
-            pass 
-        loop_start_date += timedelta(days=7)
-    return all_slots
-
-@st.cache_data(ttl=3600) 
-def get_organization_uri(api_key):
-    """Fetches the organization URI associated with the API key."""
-    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    url = "https://api.calendly.com/users/me"
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.json().get("resource", {}).get("current_organization")
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 401:
-             st.error("Invalid API Key. Please check your Streamlit secrets.", icon="🚨")
-        else:
-             st.error(f"Calendly API Error (User): {e.response.json().get('message', 'Unknown Error')}", icon="🚨")
-        return None
-
-@st.cache_data(ttl=600)
-def fetch_all_scheduled_events(organization_uri, start_date, end_date, api_key):
-    """
-    Fetches all booked appointments for an entire organization and
-    returns a count of long events per user URI.
-    """
-    counts_by_user_uri = defaultdict(int)
-    if not api_key or not organization_uri: 
-        return counts_by_user_uri
-
-    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    base_url = "https://api.calendly.com/scheduled_events"
-    
-    params = {
-        'organization': organization_uri,
-        'min_start_time': format_to_iso_z(start_date),
-        'max_start_time': format_to_iso_z(end_date),
-        'count': 100,
-        'status': 'active' 
-    }
-    
-    while base_url:
-        try:
-            response = requests.get(base_url, headers=headers, params=params)
-            response.raise_for_status() 
-            data = response.json()
-            
-            for event in data.get("collection", []):
-                try:
-                    start_str = event['start_time'].replace('Z', '+00:00')
-                    end_str = event['end_time'].replace('Z', '+00:00')
-                    start_time = datetime.fromisoformat(start_str)
-                    end_time = datetime.fromisoformat(end_str)
-                    duration_minutes = (end_time - start_time).total_seconds() / 60
-                    
-                    if duration_minutes >= 60:
-                        user_uri = event.get("event_memberships", [{}])[0].get("user")
-                        if user_uri:
-                            counts_by_user_uri[user_uri] += 1
-                except Exception:
-                    pass 
-
-            base_url = data.get("pagination", {}).get("next_page")
-            params = {} 
-            
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 403:
-                 st.error("API Key Error: This key does not have Organization-level permission to read scheduled events for all users. Please use an Admin-generated token.", icon="🚨")
-            else:
-                 st.error(f"Calendly API Error (Events): {e.response.json().get('message', 'Unknown Error')}", icon="🚨")
-            base_url = None 
-        except Exception as e:
-            st.error(f"A non-HTTP error occurred: {e}", icon="🚨")
-            base_url = None
-            
-    return counts_by_user_uri
-
-def fetch_language_availability(team_members, api_key, selected_language):
-    """Fetches availability for a single language using concurrent API calls for speed."""
-    utc, now = pytz.UTC, datetime.now(pytz.UTC)
-    minimum_booking_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_start_date = now + timedelta(minutes=1)
-    api_end_date = api_start_date + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
-
-    language_slots = []
-    members_for_lang = [m for m in team_members if selected_language in m["languages"]]
-    
-    with ThreadPoolExecutor(max_workers=len(members_for_lang) or 1) as executor:
-        args = [(m["soloEventUri"], api_start_date, api_end_date, api_key) for m in members_for_lang]
-        results = executor.map(lambda p: get_user_availability(*p), args)
-        for member, user_slots in zip(members_for_lang, results):
-            for slot_time in user_slots:
-                if slot_time >= minimum_booking_time:
-                    language_slots.append({"specialist": member["name"], "dateTime": slot_time})
-    language_slots.sort(key=lambda x: x["dateTime"])
-    return language_slots
-
-def fetch_all_team_availability(team_members, api_key):
-    """
-    Fetches availability (concurrently) AND all scheduled events (one big call) 
-    for all team members.
-    """
-    utc, now = pytz.UTC, datetime.now(pytz.UTC)
-    
-    min_availability_time = now + timedelta(hours=MINIMUM_NOTICE_HOURS)
-    api_availability_start = now + timedelta(minutes=1)
-    api_availability_end = api_availability_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4)
-    
-    api_scheduled_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    api_scheduled_end = api_scheduled_start + timedelta(days=WORKING_DAYS_TO_CHECK + 4) 
-    
-    availability_by_specialist = defaultdict(list)
-    raw_slots_for_summary = []
-    booked_event_counts = {} 
-
-    with ThreadPoolExecutor(max_workers=len(team_members) or 1) as executor:
-        args = [(m, api_key) for m in team_members]
-        def fetch_availability(member, key):
-            available_slots = get_user_availability(
-                member["soloEventUri"], api_availability_start, api_availability_end, key
-            )
-            return member, available_slots
-        results = executor.map(lambda p: fetch_availability(*p), args)
-        for member, user_slots in results:
-            for slot_time in user_slots:
-                if slot_time >= min_availability_time:
-                    availability_by_specialist[member["name"]].append(slot_time)
-                    raw_slots_for_summary.append({"specialist_info": member, "dateTime": slot_time})
-    
-    organization_uri = get_organization_uri(api_key)
-    if organization_uri:
-        counts_by_user_uri = fetch_all_scheduled_events(
-            organization_uri, api_scheduled_start, api_scheduled_end, api_key
-        )
-        user_uri_to_name = {m['userUri']: m['name'] for m in team_members}
-        for uri, count in counts_by_user_uri.items():
-            if uri in user_uri_to_name:
-                name = user_uri_to_name[uri]
-                booked_event_counts[name] = count
-
-    return availability_by_specialist, raw_slots_for_summary, booked_event_counts
-
-# --- NEW: Function for Organization Discovery ---
-@st.cache_data(ttl=3600) # Cache for 1 hour
-def fetch_organization_discovery_report(organization_uri, api_key):
-    """Fetches all users and their event types for an entire organization."""
-    if not api_key or not organization_uri:
-        return []
-    
-    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
-    all_user_event_data = []
-
-    # 1. Get all users in the organization
-    users_url = f"https://api.calendly.com/organization_memberships?organization={organization_uri}&count=100"
-    all_users = []
-    
-    while users_url:
-        try:
-            response = requests.get(users_url, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            all_users.extend(data.get("collection", []))
-            users_url = data.get("pagination", {}).get("next_page")
-        except requests.exceptions.HTTPError as e:
-            st.error(f"Failed to fetch organization users: {e.response.json().get('message')}", icon="🚨")
-            users_url = None
-    
-    # 2. For each user, get their event types
-    for user_membership in all_users:
-        user = user_membership.get("user", {})
-        user_name = user.get("name")
-        user_email = user.get("email")
-        user_uri = user.get("uri")
-        
-        if not user_uri:
-            continue
-
-        events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
-        
-        while events_url:
-            try:
-                response = requests.get(events_url, headers=headers)
-                response.raise_for_status()
-                data = response.json()
-                
-                for event in data.get("collection", []):
-                    # Only include solo events
-                    if event.get("kind") == "solo":
-                        all_user_event_data.append({
-                            "User Name": user_name,
-                            "User Email": user_email,
-                            "User URI": user_uri,
-                            "Event Type Name": event.get("name"),
-                            "Event Type URI": event.get("uri"),
-                            "Event Active": event.get("active", False)
-                        })
-                
-                events_url = data.get("pagination", {}).get("next_page")
-            except requests.exceptions.HTTPError:
-                events_url = None # Silently fail for one user's events
-
-    return all_user_event_data
-
-def calculate_true_slots(date_times):
-    """Calculates non-overlapping slots."""
-    if not date_times: return 0
-    date_times.sort()
-    slot_duration = timedelta(minutes=SLOT_DURATION_MINUTES)
-    count = 0
-    last_booked_end_time = datetime.min.replace(tzinfo=pytz.UTC)
-    for start_time in date_times:
-        if start_time >= last_booked_end_time:
-            count += 1
-            last_booked_end_time = start_time + slot_duration
-    return count
-
-def get_next_working_days(n, timezone):
-    """Gets the next N working days."""
-    days = []
-    current_day = datetime.now(timezone).date()
-    while len(days) < n:
-        if current_day.weekday() < 5:
-            days.append(current_day)
-        current_day += timedelta(days=1)
-    return days
-
-# --- UI HELPER FUNCTIONS ---
-def display_main_availability(all_slots, language, timezone, timezone_friendly):
-    """Renders the main availability view for a selected language."""
-    if all_slots is None:
-        return 
-
-    slots_by_day = defaultdict(list)
-    working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, timezone)
-    for slot in all_slots:
-        day = slot["dateTime"].astimezone(timezone).date()
-        if day in working_days:
-            slots_by_day[day].append(slot)
-    
-    if not slots_by_day:
-         st.info(f"No upcoming availability found for **{language}** in the next {WORKING_DAYS_TO_CHECK} working days.")
-         return
-
-    st.header(f"Available Slots for {language}")
-    st.write(f"Times are shown in **{timezone_friendly}**.")
-    st.divider()
-
-    time_slot_style = (
-        "display: inline-block; "
-        "border: 1px solid #e0e0e0; "
-        "border-radius: 5px; "
-        "padding: 8px 12px; "
-        "margin: 4px; "
-        "font-weight: 500;"
-    )
-
-    for day in working_days:
-        if day in slots_by_day:
-            st.subheader(day.strftime('%A, %d %B %Y'))
-            day_slots = slots_by_day[day]
-            unique_times = sorted(list(set(s['dateTime'].astimezone(timezone).strftime('%H:%M') for s in day_slots)))
-            
-            time_tags = "".join([f"<div style='{time_slot_style}'>🕒 {time_str}</div>" for time_str in unique_times])
-            st.markdown(f"<div style='display: flex; flex-wrap: wrap;'>{time_tags}</div>", unsafe_allow_html=True)
-            
-            st.divider()
-
-    st.header("Summary of Daily Availability")
-    summary_data = []
-    for day in working_days:
-         if day in slots_by_day:
-            day_slots = slots_by_day[day]
-            slots_by_specialist = defaultdict(list)
-            for slot in day_slots:
-                slots_by_specialist[slot['specialist']].append(slot['dateTime'])
-            total_true_slots = sum(calculate_true_slots(s_slots) for s_slots in slots_by_specialist.values())
-            summary_data.append({"Date": day.strftime('%A, %d %B'), "Bookable Slots": total_true_slots})
-    if summary_data:
-        st.dataframe(pd.DataFrame(summary_data), use_container_width=True, hide_index=True)
-
-# --- STREAMLIT UI ---
-
-st.set_page_config(layout="wide")
-st.title("EMEA Onboarding Team Availability")
-
-if 'last_params' not in st.session_state:
-    st.session_state['last_params'] = {}
+# --- STATE MANAGEMENT ---
+# Initialize session state variables
 if 'availability_data' not in st.session_state:
     st.session_state['availability_data'] = None
-if 'admin_authenticated' not in st.session_state: 
-    st.session_state['admin_authenticated'] = False
-if 'dev_authenticated' not in st.session_state: # <-- NEW: Session state for dev
-    st.session_state['dev_authenticated'] = False
-if 'admin_data' not in st.session_state: 
-    st.session_state['admin_data'] = None
+if 'last_run_params' not in st.session_state:
+    st.session_state['last_run_params'] = None
 if 'org_report_data' not in st.session_state:
     st.session_state['org_report_data'] = None
 
+# --- API FUNCTIONS ---
 
-# --- Sidebar ---
-st.sidebar.header("Options")
-selected_language = st.sidebar.selectbox("Select language", options=LANGUAGES)
-selected_timezone_friendly = st.sidebar.selectbox("Select your timezone", options=TIMEZONE_OPTIONS.keys(), index=list(TIMEZONE_OPTIONS.keys()).index(DEFAULT_TIMEZONE_FRIENDLY))
-selected_timezone = pytz.timezone(TIMEZONE_OPTIONS[selected_timezone_friendly])
+@st.cache_data(ttl=600) # Cache data for 10 minutes
+def get_availability(user_uri, event_type_uri, start_time_str, end_time_str, api_key):
+    """
+    Fetches availability for a specific user and event type from Calendly.
+    """
+    url = "https://api.calendly.com/event_type_available_times"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    params = {
+        "event_type": event_type_uri,
+        "start_time": start_time_str,
+        "end_time": end_time_str
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+        data = response.json()
+        return data.get("collection", [])
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching availability for {user_uri}: {e}")
+        return []
 
-team_members = get_filtered_team_members()
+def get_availability_for_user(user, start_date, end_date, selected_timezone, api_key):
+    """
+    Wrapper function to fetch availability for one user, formatted for ThreadPoolExecutor.
+    """
+    if not user["active"] or not user["soloEventUri"]:
+        return user["name"], user["languages"], []
+
+    # Format dates for API call (must be in UTC)
+    start_time_utc = selected_timezone.localize(datetime.combine(start_date, datetime.min.time())).astimezone(pytz.utc)
+    end_time_utc = selected_timezone.localize(datetime.combine(end_date, datetime.max.time())).astimezone(pytz.utc)
+    
+    start_time_str = start_time_utc.isoformat().replace('+00:00', 'Z')
+    end_time_str = end_time_utc.isoformat().replace('+00:00', 'Z')
+
+    availability_slots = get_availability(user["userUri"], user["soloEventUri"], start_time_str, end_time_str, api_key)
+    
+    return user["name"], user["languages"], availability_slots
+
+def process_availability_data(all_availability, selected_timezone, start_date, end_date):
+    """
+    Processes the raw availability data into a structured format for display.
+    """
+    daily_availability = defaultdict(lambda: defaultdict(list))
+    
+    for user_name, languages, slots in all_availability:
+        if not slots:
+            continue
+            
+        for slot in slots:
+            start_time_utc = datetime.fromisoformat(slot["start_time"].replace("Z", "+00:00"))
+            start_time_local = start_time_utc.astimezone(selected_timezone)
+            
+            date_str = start_time_local.strftime("%Y-%m-%d")
+            time_str = start_time_local.strftime("%I:%M %p") # 12-hour format
+            
+            daily_availability[date_str][user_name].append(time_str)
+
+    # Create a list of dates to iterate over
+    date_range = [start_date + timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+    
+    processed_data = []
+    for date in date_range:
+        date_str = date.strftime("%Y-%m-%d")
+        day_name = date.strftime("%A") # Get day of the week
+        
+        # Check for weekend
+        is_weekend = day_name in ["Saturday", "Sunday"]
+        
+        row = {"Date": date.strftime("%Y-%m-%d (%A)")}
+        
+        # Check if the date has any availability data at all
+        if date_str not in daily_availability and is_weekend:
+            # Weekend with no slots, mark all active users as "Weekend"
+            for user in TEAM_DATA:
+                if user["active"]:
+                    row[user["name"]] = "Weekend"
+        elif date_str not in daily_availability:
+            # Weekday with no slots, mark all active users as "No Availability"
+            for user in TEAM_DATA:
+                if user["active"]:
+                    row[user["name"]] = "No Availability"
+        else:
+            # Date has availability, fill it in
+            slots_for_day = daily_availability[date_str]
+            for user in TEAM_DATA:
+                if not user["active"]:
+                    row[user["name"]] = "Inactive"
+                elif user["name"] in slots_for_day:
+                    # Join slots with a comma
+                    row[user["name"]] = ", ".join(slots_for_day[user["name"]])
+                elif is_weekend:
+                    # Weekend, but no slots found (unlikely but safe)
+                    row[user["name"]] = "Weekend"
+                else:
+                    # Weekday, but no slots for this specific user
+                    row[user["name"]] = "No Availability"
+                    
+        processed_data.append(row)
+        
+    return pd.DataFrame(processed_data)
+
+def convert_df_to_csv(df):
+    """Converts DataFrame to CSV string for downloading."""
+    return df.to_csv(index=False).encode('utf-8')
+
+# --- UI LAYOUT ---
+
+st.title("🌏 APAC Availability")
+
+# Get Calendly API Key
 calendly_api_key = st.secrets.get("CALENDLY_API_KEY")
+if not calendly_api_key:
+    st.error("CALENDLY_API_KEY secret not found. Please add it to your Streamlit secrets.")
+    st.stop()
 
-current_params = {'lang': selected_language, 'tz': selected_timezone_friendly}
-if current_params != st.session_state.get('last_params'):
-    st.session_state['availability_data'] = None 
-    st.session_state['admin_data'] = None 
-    st.session_state['org_report_data'] = None # Clear all data on param change
+# --- Sidebar Controls ---
+with st.sidebar:
+    st.header("Filters")
+    
+    # Date range selection
+    st.subheader("Date Range")
+    today = datetime.now().date()
+    start_date = st.date_input("Start Date", today)
+    end_date = st.date_input("End Date", today + timedelta(days=DAYS_TO_SHOW))
+
+    if start_date > end_date:
+        st.warning("End date must be after start date.")
+    
+    st.divider()
+    
+    # Timezone selection
+    st.subheader("Timezone")
+    selected_timezone_display_str = st.selectbox(
+        "Select Timezone",
+        TIMEZONES_DISPLAY,
+        index=default_tz_index
+    )
+    # Get the actual IANA timezone name from the display string
+    selected_timezone_str = TIMEZONE_MAP[selected_timezone_display_str]
+    selected_timezone = pytz.timezone(selected_timezone_str)
+    
+    st.divider()
+
+    # Language filter
+    st.subheader("Language")
+    selected_language = st.selectbox(
+        "Filter by Language",
+        ["All"] + SUPPORTED_LANGUAGES
+    )
+    
+    st.divider()
+
+    # Get Availability Button
+    if st.button("Get Availability", type="primary", use_container_width=True):
+        # Set parameters for checking cache
+        current_run_params = (start_date, end_date, selected_timezone_str, selected_language)
+        
+        # Check if we need to re-fetch
+        if st.session_state['availability_data'] is None or current_run_params != st.session_state['last_run_params']:
+            st.session_state['last_run_params'] = current_run_params
+            st.session_state['availability_data'] = None # Clear old data
+            
+            # Filter users based on language
+            if selected_language == "All":
+                users_to_fetch = [user for user in TEAM_DATA if user["active"]]
+            else:
+                users_to_fetch = [
+                    user for user in TEAM_DATA 
+                    if user["active"] and selected_language in user["languages"]
+                ]
+
+            if not users_to_fetch:
+                st.warning("No active team members match the selected language.")
+            else:
+                with st.spinner(f"Fetching availability for {len(users_to_fetch)} team member(s)..."):
+                    all_availability = []
+                    # Use ThreadPoolExecutor to fetch in parallel
+                    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+                        futures = [
+                            executor.submit(get_availability_for_user, user, start_date, end_date, selected_timezone, calendly_api_key)
+                            for user in users_to_fetch
+                        ]
+                        for future in futures:
+                            all_availability.append(future.result())
+
+                    # Process and store the data
+                    df = process_availability_data(all_availability, selected_timezone, start_date, end_date)
+                    st.session_state['availability_data'] = df
+
+# --- Main Page Display ---
 
 if st.session_state['availability_data'] is None:
-    if not team_members:
-        st.warning(f"No active members found for the '{TEAM_TO_REPORT}' team.")
-    else:
-        with st.spinner(f"Fetching latest availability for {selected_language}..."):
-            all_slots = fetch_language_availability(team_members, calendly_api_key, selected_language)
-            st.session_state['availability_data'] = all_slots
-            st.session_state['last_params'] = current_params
-
-display_main_availability(st.session_state['availability_data'], selected_language, selected_timezone, selected_timezone_friendly)
-
-# --- Admin Section ---
-st.sidebar.divider()
-st.sidebar.header("Admin Access")
-password = st.sidebar.text_input("Enter password", type="password", key="admin_pass")
-
-if st.sidebar.button("Unlock Admin View"):
-    if password == ADMIN_PASSWORD:
-        st.session_state['admin_authenticated'] = True
-        st.session_state['dev_authenticated'] = False # Log out of dev
-        st.session_state['admin_data'] = None 
-        st.session_state['org_report_data'] = None 
-    else:
-        st.sidebar.error("Incorrect password.", key="admin_err")
-        st.session_state['admin_authenticated'] = False
-
-# --- Developer Section ---
-st.sidebar.divider()
-st.sidebar.header("Developer Access")
-dev_password = st.sidebar.text_input("Enter developer password", type="password", key="dev_pass")
-
-if st.sidebar.button("Unlock Developer Tools"):
-    if dev_password == DEV_PASSWORD:
-        st.session_state['dev_authenticated'] = True
-        st.session_state['admin_authenticated'] = False # Log out of admin
-        st.session_state['admin_data'] = None
-        st.session_state['org_report_data'] = None
-    else:
-        st.sidebar.error("Incorrect developer password.", key="dev_err")
-        st.session_state['dev_authenticated'] = False
-
-
-# --- MAIN PAGE - ADMIN VIEW ---
-if st.session_state.get('admin_authenticated'):
-    st.sidebar.success("Admin view unlocked!")
-    st.divider()
-    st.header("🔒 Admin View")
-
-    if st.session_state['admin_data'] is None:
-        with st.spinner("Fetching all team availability for admin view..."):
-            active_team_members = get_filtered_team_members()
-            admin_availability, raw_slots, booked_counts = fetch_all_team_availability(
-                active_team_members, 
-                calendly_api_key
-            )
-            st.session_state['admin_data'] = (admin_availability, raw_slots, booked_counts)
+    st.info("Please select your filters in the sidebar and click 'Get Availability'.")
+else:
+    df = st.session_state['availability_data']
     
-    if st.session_state['admin_data'] is None:
-        st.error("Failed to load admin data. Check API key and permissions.")
+    # Filter DataFrame columns based on language selection
+    if selected_language == "All":
+        active_users = [user["name"] for user in TEAM_DATA if user["active"]]
+        cols_to_show = ["Date"] + [user for user in active_users if user in df.columns]
     else:
-        admin_availability, raw_slots, booked_counts = st.session_state['admin_data']
-    
-        if not admin_availability and not booked_counts:
-            st.warning("No availability or booked events found for any team member.")
-        else:
-            active_team_members = get_filtered_team_members()
-            uk_timezone = pytz.timezone("Europe/London")
-            working_days = get_next_working_days(WORKING_DAYS_TO_CHECK, uk_timezone)
-            
-            # --- 1. Language Summary ---
-            st.subheader("Team Summary by Language")
-            st.write("Total bookable slots for the entire team.")
-            st.info("💡 For the best experience, view these tables on a desktop computer.")
-            
-            lang_summary_slots = defaultdict(lambda: defaultdict(int))
-            slots_by_specialist_day = defaultdict(lambda: defaultdict(list))
+        active_users = [
+            user["name"] for user in TEAM_DATA 
+            if user["active"] and selected_language in user["languages"]
+        ]
+        cols_to_show = ["Date"] + [user for user in active_users if user in df.columns]
 
-            for slot in raw_slots:
-                day = slot['dateTime'].astimezone(uk_timezone).date()
-                if day in working_days:
-                    specialist_name = slot['specialist_info']['name']
-                    slots_by_specialist_day[specialist_name][day].append(slot['dateTime'])
-            
-            for specialist, day_slots in slots_by_specialist_day.items():
-                specialist_info = next((m for m in active_team_members if m['name'] == specialist), None)
-                if specialist_info:
-                    for day, slots in day_slots.items():
-                        true_slots = calculate_true_slots(slots)
-                        for lang in specialist_info['languages']:
-                            lang_summary_slots[lang][day] += true_slots
+    # Ensure 'Date' is always the first column and exists
+    if "Date" not in df.columns:
+        st.error("An error occurred: 'Date' column is missing.")
+    else:
+        # Reorder columns to ensure 'Date' is first, followed by filtered users
+        missing_users = [user for user in active_users if user not in df.columns]
+        if missing_users:
+            st.warning(f"Data for {', '.join(missing_users)} could not be fetched. They may be inactive or have no 'solo' event URI set.")
+        
+        final_df = df[cols_to_show]
 
-            summary_data = []
-            for lang in LANGUAGES:
-                row = {"Language": lang}
-                for day in working_days:
-                    day_str = day.strftime('%a %d/%m')
-                    row[day_str] = lang_summary_slots[lang].get(day, 0)
-                summary_data.append(row)
-            summary_df = pd.DataFrame(summary_data).set_index("Language")
+        st.divider()
+        st.subheader(f"Availability from {start_date.strftime('%B %d')} to {end_date.strftime('%B %d')}")
+        st.caption(f"All times are displayed in **{selected_timezone_display_str}** timezone.")
 
-            def color_summary_cells(val):
-                if val == 0: return 'background-color: #ffcccb; color: black;'
-                elif 1 <= val <= 4: return 'background-color: #d4edda; color: black;'
-                else: return 'background-color: #28a745; color: white;'
-
-            st.dataframe(summary_df.style.applymap(color_summary_cells), use_container_width=True)
-            st.download_button(
-                 label="Download Language Summary as CSV",
-                 data=convert_df_to_csv(summary_df),
-                 file_name="language_summary.csv",
-                 mime="text/csv",
-             )
-            st.divider()
-
-            # --- 2. Team Capacity Heatmap ---
-            st.subheader("Team Capacity Heatmap")
-            st.write("A visual overview of each specialist's bookable slots per day.")
-            heatmap_data = defaultdict(lambda: {day.strftime('%a %d/%m'): 0 for day in working_days})
-            for specialist, slots in admin_availability.items():
-                slots_by_day = defaultdict(list)
-                for slot_time in slots:
-                    day = slot_time.astimezone(uk_timezone).date()
-                    if day in working_days:
-                        slots_by_day[day].append(slot_time)
-                for day, day_slots in slots_by_day.items():
-                    heatmap_data[specialist][day.strftime('%a %d/%m')] = calculate_true_slots(day_slots)
-            
-            heatmap_df = pd.DataFrame(heatmap_data).T
-            heatmap_df.index.name = "Specialist"
-            heatmap_df = heatmap_df.reindex(sorted(heatmap_df.index))
-            
-            def color_heatmap_cells(val):
-                if val == 0: return 'background-color: #ffcccb; color: black;'
-                elif 1 <= val <= 2: return 'background-color: #d4edda; color: black;'
-                else: return 'background-color: #28a745; color: white;'
-            
-            st.dataframe(heatmap_df.style.applymap(color_heatmap_cells), use_container_width=True)
-            st.download_button(
-                 label="Download Heatmap as CSV",
-                 data=convert_df_to_csv(heatmap_df),
-                 file_name="team_capacity_heatmap.csv",
-                 mime="text/csv",
-             )
-            st.divider()
-            
-            # --- 3. Booked Appointments Report ---
-            st.subheader("Booked Appointments Report")
-            st.write(f"Total count of booked appointments 60 minutes or longer in the next {WORKING_DAYS_TO_CHECK} working days.")
-            
-            report_data = []
-            specialist_names = sorted([m['name'] for m in active_team_members])
-            
-            for specialist in specialist_names:
-                report_data.append({
-                    "Specialist": specialist, 
-                    "Booked Appointments (60+ min)": booked_counts.get(specialist, 0)
-                })
-                
-            report_df = pd.DataFrame(report_data).set_index("Specialist")
-            st.dataframe(report_df, use_container_width=True)
-            st.download_button(
-                 label="Download Booked Report as CSV",
-                 data=convert_df_to_csv(report_df),
-                 file_name="booked_appointments_report.csv",
-                 mime="text/csv",
-             )
-            st.divider()
-
-            # --- 4. Detailed Specialist Availability ---
-            st.subheader("Detailed Specialist Availability")
-            sorted_specialists = sorted(admin_availability.keys())
-            for specialist in sorted_specialists:
-                with st.expander(f"**{specialist}** - {len(admin_availability.get(specialist, []))} available slots found"):
-                    slots = admin_availability.get(specialist)
-                    if not slots:
-                        st.write("No availability in the upcoming period.")
-                        continue
-                    slots_by_day = defaultdict(list)
-                    for slot_time_utc in slots:
-                        day = slot_time_utc.astimezone(uk_timezone).date()
-                        if day in working_days:
-                            slots_by_day[day].append(slot_time_utc.astimezone(uk_timezone))
-                    
-                    if not slots_by_day:
-                        st.write("No availability on upcoming weekdays.")
-                        continue
-
-                    for day in working_days:
-                         if day in slots_by_day:
-                            st.markdown(f"**{day.strftime('%A, %d %B')}**")
-                            day_slots = sorted(slots_by_day[day])
-                            time_strings = [f"`{s.strftime('%H:%M')}`" for s in day_slots]
-                            st.write(" | ".join(time_strings))
-            
-            st.divider()
-
-# --- MAIN PAGE - DEV VIEW ---
-if st.session_state.get('dev_authenticated'):
-    st.sidebar.success("Developer tools unlocked!")
-    st.divider()
-    st.header("⚙️ Developer Tools")
-
-    # --- Organization Discovery Tool ---
-    st.subheader("Organization Discovery Tool")
-    st.write("A tool to find all users and their 'solo' event types in your Calendly organization. Use this to find the URIs needed to build new team apps.")
-    st.warning("This tool scans your *entire* organization and may be slow.")
-    
-    if st.button("Run Organization Discovery Report"):
-        st.session_state['org_report_data'] = None # Clear old data
-        organization_uri = get_organization_uri(calendly_api_key)
-        if organization_uri:
-            with st.spinner("Scanning your organization... This may take a minute."):
-                report_data = fetch_organization_discovery_report(organization_uri, calendly_api_key)
-                if report_data:
-                    df = pd.DataFrame(report_data)
-                    st.session_state['org_report_data'] = df
-                else:
-                    st.error("Could not retrieve organization report.")
-        else:
-            st.error("Could not retrieve organization URI. Check API Key permissions.")
-
-    if st.session_state['org_report_data'] is not None:
-        df = st.session_state['org_report_data']
-        st.dataframe(df, use_container_width=True)
+        # Display the DataFrame as a table
+        st.dataframe(final_df, use_container_width=True)
+        
+        # Download button
         st.download_button(
-            label="Download Full Report as CSV",
-            data=convert_df_to_csv(df),
-            file_name="full_organization_event_report.csv",
+            label="Download as CSV",
+            data=convert_df_to_csv(final_df),
+            file_name=f"apac_availability_{start_date}_to_{end_date}.csv",
             mime="text/csv",
         )
+
