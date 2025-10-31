@@ -12,7 +12,7 @@ TEAM_DATA = [
     {
         "name": "Anthony Ferlazzo",
         "userUri": "https://api.calendly.com/users/HCHECMCAGLZOSHN7",
-        "soloEventUri": "https://api.calendly.com/event_types/ECB2NPVJCAKUXGR7",
+        "soloEventUri": "https://api.calendly.com/event_types/GDEDPXPOOJEF32SR",
         "languages": ["English"],
         "team": "APAC",
         "active": True
