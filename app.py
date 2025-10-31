@@ -315,6 +315,39 @@ def fetch_organization_discovery_report(organization_uri, api_key):
 
     return all_user_event_data
 
+# --- NEW: Function for Single User Event Discovery ---
+@st.cache_data(ttl=60) # Cache for 1 minute
+def fetch_user_event_types(user_uri, api_key):
+    """Fetches all 'solo' event types for a single user URI."""
+    if not api_key or not user_uri:
+        return []
+    
+    headers = {'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'}
+    events_url = f"https://api.calendly.com/event_types?user={user_uri}&count=50"
+    user_events = []
+    
+    while events_url:
+        try:
+            response = requests.get(events_url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            
+            for event in data.get("collection", []):
+                # Only include solo events
+                if event.get("kind") == "solo":
+                    user_events.append({
+                        "Event Type Name": event.get("name"),
+                        "Event Type URI": event.get("uri"),
+                        "Event Active": event.get("active", False)
+                    })
+            
+            events_url = data.get("pagination", {}).get("next_page")
+        except requests.exceptions.HTTPError as e:
+            st.error(f"Failed to fetch events for user: {e.response.json().get('message')}", icon="🚨")
+            events_url = None # Stop on error
+
+    return user_events
+
 def calculate_true_slots(date_times):
     """Calculates non-overlapping slots."""
     if not date_times: return 0
@@ -409,6 +442,8 @@ if 'admin_data' not in st.session_state:
     st.session_state['admin_data'] = None
 if 'org_report_data' not in st.session_state:
     st.session_state['org_report_data'] = None
+if 'user_report_data' not in st.session_state: # <-- NEW
+    st.session_state['user_report_data'] = None
 
 
 # --- Sidebar ---
@@ -432,6 +467,7 @@ if current_params != st.session_state.get('last_params'):
     st.session_state['availability_data'] = None 
     st.session_state['admin_data'] = None 
     st.session_state['org_report_data'] = None # Clear all data on param change
+    st.session_state['user_report_data'] = None # <-- NEW
 
 if st.session_state['availability_data'] is None:
     if not team_members:
@@ -455,6 +491,7 @@ if st.sidebar.button("Unlock Admin View"):
         st.session_state['dev_authenticated'] = False # Log out of dev
         st.session_state['admin_data'] = None 
         st.session_state['org_report_data'] = None 
+        st.session_state['user_report_data'] = None # <-- NEW
     else:
         st.sidebar.error("Incorrect password.", key="admin_err")
         st.session_state['admin_authenticated'] = False
@@ -470,6 +507,7 @@ if st.sidebar.button("Unlock Developer Tools"):
         st.session_state['admin_authenticated'] = False # Log out of admin
         st.session_state['admin_data'] = None
         st.session_state['org_report_data'] = None
+        st.session_state['user_report_data'] = None # <-- NEW
     else:
         st.sidebar.error("Incorrect developer password.", key="dev_err")
         st.session_state['dev_authenticated'] = False
@@ -636,8 +674,34 @@ if st.session_state.get('dev_authenticated'):
     st.divider()
     st.header("⚙️ Developer Tools")
 
-    # --- Organization Discovery Tool ---
-    st.subheader("Organization Discovery Tool")
+    # --- NEW: Single User Tool ---
+    st.divider()
+    st.subheader("Single User Event-Type Discovery (Fast)")
+    st.write("Fetch all 'solo' event types for one specific user URI.")
+    
+    # Pre-fill with Anthony's URI as a helper
+    default_user_uri = TEAM_DATA[0].get('userUri', '') 
+    user_uri_to_check = st.text_input("User URI to check", value=default_user_uri)
+    
+    if st.button("Fetch Events for User"):
+        st.session_state['user_report_data'] = None # Clear old
+        if user_uri_to_check:
+            with st.spinner(f"Fetching events for {user_uri_to_check}..."):
+                report_data = fetch_user_event_types(user_uri_to_check, calendly_api_key)
+                if report_data:
+                    df = pd.DataFrame(report_data)
+                    st.session_state['user_report_data'] = df
+                else:
+                    st.error("No 'solo' events found for this user.")
+        else:
+            st.warning("Please enter a User URI.")
+    
+    if st.session_state['user_report_data'] is not None:
+        st.dataframe(st.session_state['user_report_data'], use_container_width=True)
+
+    # --- Original Organization Discovery Tool ---
+    st.divider()
+    st.subheader("Organization Discovery Tool (Slow)")
     st.write("A tool to find all users and their 'solo' event types in your Calendly organization. Use this to find the URIs needed to build new team apps.")
     st.warning("This tool scans your *entire* organization and may be slow.")
     
