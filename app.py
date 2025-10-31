@@ -7,6 +7,7 @@ from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor # For parallel API calls
 
 # --- CONFIGURATION ---
+# --- APAC TEAM DATA ---
 TEAM_DATA = [
     {
         "name": "Anthony Ferlazzo",
@@ -42,12 +43,11 @@ TEAM_DATA = [
     },
 ]
 
-# Supported languages for filtering
+# --- APAC SUPPORTED LANGUAGES ---
 SUPPORTED_LANGUAGES = ["English"]
 
-# Timezone configuration
+# --- APAC TIMEZONE CONFIGURATION ---
 # Map display strings to a primary IANA timezone for that group.
-# The primary timezone will be used for calculations.
 TIMEZONE_MAP = {
     "UTC+7 (Bangkok)": "Asia/Bangkok",
     "UTC+8 (Singapore/Manila/Perth)": "Asia/Singapore",
@@ -199,6 +199,108 @@ def convert_df_to_csv(df):
     """Converts DataFrame to CSV string for downloading."""
     return df.to_csv(index=False).encode('utf-8')
 
+# --- DEVELOPER TOOL API FUNCTIONS ---
+
+@st.cache_data(ttl=600)
+def get_organization_uri(api_key):
+    """Fetches the user's organization URI."""
+    url = "https://api.calendly.com/users/me"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()["resource"]["current_organization"]
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error fetching user/org info: {e}")
+        return None
+
+@st.cache_data(ttl=600)
+def get_paginated_data(url, headers, params):
+    """Handles paginated requests to the Calendly API."""
+    all_data = []
+    while url:
+        try:
+            response = requests.get(url, headers=headers, params=params)
+            response.raise_for_status()
+            data = response.json()
+            all_data.extend(data["collection"])
+            url = data["pagination"]["next_page"]
+            params = {} # Params are only needed for the first request
+        except requests.exceptions.RequestException as e:
+            st.error(f"Error fetching paginated data: {e}")
+            break
+    return all_data
+
+@st.cache_data(ttl=600)
+def fetch_organization_discovery_report(organization_uri, api_key):
+    """Fetches all users and their 'solo' event types for the organization."""
+    headers = {"Authorization": f"Bearer {api_key}"}
+    
+    # 1. Get all users in the organization
+    users_url = f"{organization_uri}/memberships"
+    users_params = {"count": 100}
+    all_users = get_paginated_data(users_url, headers, users_params)
+    
+    if not all_users:
+        st.warning("No users found in the organization.")
+        return []
+
+    report_data = []
+    
+    # 2. For each user, get their event types
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {}
+        for user_membership in all_users:
+            user_uri = user_membership["user"]["uri"]
+            user_name = user_membership["user"]["name"]
+            user_email = user_membership["user"]["email"]
+            
+            event_types_url = "https://api.calendly.com/event_types"
+            event_types_params = {"user": user_uri, "count": 100}
+            futures[executor.submit(get_paginated_data, event_types_url, headers, event_types_params)] = (user_name, user_email, user_uri)
+
+        for future in futures:
+            user_name, user_email, user_uri = futures[future]
+            event_types = future.result()
+            
+            if not event_types:
+                report_data.append({
+                    "Name": user_name,
+                    "Email": user_email,
+                    "User URI": user_uri,
+                    "Event Type Name": "N/A",
+                    "Event Type URI": "N/A",
+                    "Event Kind": "N/A"
+                })
+                continue
+
+            # Filter for 'solo' event types
+            solo_events_found = False
+            for et in event_types:
+                if et["kind"] == "solo":
+                    solo_events_found = True
+                    report_data.append({
+                        "Name": user_name,
+                        "Email": user_email,
+                        "User URI": user_uri,
+                        "Event Type Name": et["name"],
+                        "Event Type URI": et["uri"],
+                        "Event Kind": et["kind"]
+                    })
+            
+            if not solo_events_found:
+                 report_data.append({
+                    "Name": user_name,
+                    "Email": user_email,
+                    "User URI": user_uri,
+                    "Event Type Name": "No 'solo' event found",
+                    "Event Type URI": "N/A",
+                    "Event Kind": "N/A"
+                })
+
+    return sorted(report_data, key=lambda x: x["Name"])
+
+
 # --- UI LAYOUT ---
 
 st.title("🌏 APAC Availability")
@@ -310,6 +412,9 @@ else:
         if missing_users:
             st.warning(f"Data for {', '.join(missing_users)} could not be fetched. They may be inactive or have no 'solo' event URI set.")
         
+        # Make sure cols_to_show only includes columns that actually exist in df
+        cols_to_show = [col for col in cols_to_show if col in df.columns]
+        
         final_df = df[cols_to_show]
 
         st.divider()
@@ -324,6 +429,41 @@ else:
             label="Download as CSV",
             data=convert_df_to_csv(final_df),
             file_name=f"apac_availability_{start_date}_to_{end_date}.csv",
+            mime="text/csv",
+        )
+
+# --- Developer Tools Section (Copied from EMEA) ---
+with st.sidebar:
+    st.divider()
+    st.header("⚙️ Developer Tools")
+
+    # --- Organization Discovery Tool ---
+    st.subheader("Organization Discovery Tool")
+    st.write("A tool to find all users and their 'solo' event types in your Calendly organization. Use this to find the URIs needed to build new team apps.")
+    st.warning("This tool scans your *entire* organization and may be slow.")
+    
+    if st.button("Run Organization Discovery Report"):
+        st.session_state['org_report_data'] = None # Clear old data
+        organization_uri = get_organization_uri(calendly_api_key)
+        if organization_uri:
+            with st.spinner("Scanning your organization... This may take a minute."):
+                report_data = fetch_organization_discovery_report(organization_uri, calendly_api_key)
+                if report_data:
+                    df = pd.DataFrame(report_data)
+                    st.session_state['org_report_data'] = df
+                else:
+                    st.error("Could not retrieve organization report.")
+        else:
+            st.error("Could not retrieve organization URI. Check API Key permissions.")
+
+    if st.session_state['org_report_data'] is not None:
+        st.subheader("Organization Report")
+        df = st.session_state['org_report_data']
+        st.dataframe(df, use_container_width=True)
+        st.download_button(
+            label="Download Full Report as CSV",
+            data=convert_df_to_csv(df),
+            file_name="full_organization_event_report.csv",
             mime="text/csv",
         )
 
