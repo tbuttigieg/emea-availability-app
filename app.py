@@ -46,7 +46,7 @@ TEAM_DATA = [
         "soloEventUri": "https://api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
         "languages": ["English", "French"],
         "team": "EMEA",
-        "active": True
+        "active": False
     },
     {
         "name": "Jair Eastbury",
@@ -131,7 +131,7 @@ TEAM_DATA = [
 ]
 
 TEAM_TO_REPORT = 'EMEA'
-WORKING_DAYS_TO_CHECK = 3
+WORKING_DAYS_TO_CHECK = 10 
 MINIMUM_NOTICE_HOURS = 21
 SLOT_DURATION_MINUTES = 120
 ADMIN_PASSWORD = "WinAsOne" 
@@ -739,4 +739,3 @@ if st.session_state.get('dev_authenticated'):
             file_name="full_organization_event_report.csv",
             mime="text/csv",
         )
-
