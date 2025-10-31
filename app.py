@@ -46,7 +46,7 @@ TEAM_DATA = [
         "soloEventUri": "https://api.calendly.com/event_types/05722fb1-5d63-4fa9-9795-413240c72816",
         "languages": ["English", "French"],
         "team": "EMEA",
-        "active": True
+        "active": False
     },
     {
         "name": "Jair Eastbury",
